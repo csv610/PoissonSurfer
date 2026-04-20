@@ -4,6 +4,7 @@
 #include "test_marching_cubes.h"
 #include "test_ppolynomial.h"
 #include "test_sparse_matrix.h"
+#include "test_reconstruction.h"
 #include <iostream>
 
 int main() {
@@ -48,6 +49,13 @@ int main() {
         return 1;
     }
     std::cout << "Sparse Matrix tests PASSED" << std::endl;
+
+    std::cout << "=== Running Reconstruction tests ===" << std::endl;
+    if (test_reconstruction() != 0) {
+        std::cerr << "Reconstruction tests FAILED" << std::endl;
+        return 1;
+    }
+    std::cout << "Reconstruction tests PASSED" << std::endl;
 
     std::cout << "=== All tests PASSED ===" << std::endl;
     return 0;

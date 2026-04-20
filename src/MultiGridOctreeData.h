@@ -80,6 +80,10 @@ DAMAGE.
 #include "BSplineData.h"
 #include "PointStream.h"
 
+#ifdef POISSON_RECON_TESTING
+#include "../tests/test_mocks.h"
+#endif
+
 #ifndef _OPENMP
 int omp_get_num_procs( void ){ return 1; }
 int omp_get_thread_num( void ){ return 0; }
@@ -430,7 +434,7 @@ public:
 	int SetTree( PointStream< PointReal >* pointStream , int minDepth , int maxDepth , int fullDepth , int splatDepth , Real samplesPerNode ,
 		Real scaleFactor , bool useConfidence , bool useNormalWeight , Real constraintWeight , int adaptiveExponent ,
 		PointInfo& pointInfo , NormalInfo& normalInfo , std::vector< Real >& kernelDensityWeights , std::vector< Real >& centerWeights ,
-		int boundaryType=BSplineElements< 2 >::NONE , XForm4x4< Real > xForm=XForm4x4< Real >::Identity , bool makeComplete=false );
+		int boundaryType=BSplineElements< 2 >::NONE , XForm4x4< Real > xForm=XForm4x4< Real >::Identity() , bool makeComplete=false );
 	Pointer( Real ) SetLaplacianConstraints( const NormalInfo& normalInfo );
 	Pointer( Real ) SolveSystem( PointInfo& pointInfo , Pointer( Real ) constraints , bool showResidual , int iters , int maxSolveDepth , int cgDepth=0 , double cgAccuracy=0 );
 

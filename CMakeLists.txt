@@ -33,6 +33,7 @@ enable_testing()
 set(TEST_SOURCES
     src/Geometry.cpp
     src/MarchingCubes.cpp
+    src/Factor.cpp
 )
 
 add_executable(run_tests
@@ -43,10 +44,12 @@ add_executable(run_tests
     tests/test_marching_cubes.h
     tests/test_ppolynomial.h
     tests/test_sparse_matrix.h
+    tests/test_reconstruction.h
     ${TEST_SOURCES}
 )
 target_include_directories(run_tests PRIVATE src)
 target_link_libraries(run_tests PRIVATE OpenMP::OpenMP_CXX)
+target_compile_definitions(run_tests PRIVATE POISSON_RECON_TESTING)
 
 if(MSVC)
     target_compile_definitions(PoissonRecon PRIVATE _CRT_SECURE_NO_WARNINGS)
