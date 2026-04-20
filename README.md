@@ -40,7 +40,7 @@ The field of surface reconstruction is rapidly evolving, and this codebase serve
 
 ### Requirements
 - CMake 3.10+
-- A C++11 compatible compiler (Clang/GCC)
+- A C++20 compatible compiler (Clang/GCC/MSVC)
 - OpenMP (Available via `brew install libomp` on macOS)
 
 ### Building
