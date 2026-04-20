@@ -44,7 +44,7 @@ add_executable(run_tests
     tests/test_marching_cubes.h
     tests/test_ppolynomial.h
     tests/test_sparse_matrix.h
-    tests/test_reconstruction.h
+    tests/test_reconstruction.h tests/test_reconstruction_execute.h
     ${TEST_SOURCES}
 )
 target_include_directories(run_tests PRIVATE src)

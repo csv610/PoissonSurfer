@@ -5,6 +5,7 @@
 #include "test_ppolynomial.h"
 #include "test_sparse_matrix.h"
 #include "test_reconstruction.h"
+#include "test_reconstruction_execute.h"
 #include <iostream>
 
 int main() {
@@ -56,6 +57,13 @@ int main() {
         return 1;
     }
     std::cout << "Reconstruction tests PASSED" << std::endl;
+
+    std::cout << "=== Running Reconstruction method (CLI) tests ===" << std::endl;
+    if (test_reconstruction_method() != 0) {
+        std::cerr << "Reconstruction method tests FAILED" << std::endl;
+        return 1;
+    }
+    std::cout << "Reconstruction method tests PASSED" << std::endl;
 
     std::cout << "=== All tests PASSED ===" << std::endl;
     return 0;
