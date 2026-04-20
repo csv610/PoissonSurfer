@@ -30,10 +30,20 @@ target_link_libraries(SurfaceTrimmer PRIVATE OpenMP::OpenMP_CXX)
 
 enable_testing()
 
+set(TEST_SOURCES
+    src/Geometry.cpp
+    src/MarchingCubes.cpp
+)
+
 add_executable(run_tests
     tests/test_runner.cpp
     tests/test_vector.h
     tests/test_polynomial.h
+    tests/test_geometry.h
+    tests/test_marching_cubes.h
+    tests/test_ppolynomial.h
+    tests/test_sparse_matrix.h
+    ${TEST_SOURCES}
 )
 target_include_directories(run_tests PRIVATE src)
 target_link_libraries(run_tests PRIVATE OpenMP::OpenMP_CXX)
