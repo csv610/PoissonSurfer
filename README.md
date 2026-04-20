@@ -62,4 +62,38 @@ make run_tests
 ```
 
 ---
+
+## Parameter Reference
+
+### 1. PoissonRecon Parameters
+The core engine for surface reconstruction.
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `--in` | `string` | **Required.** Input point cloud (`.ply`, `.bnpts`, or ASCII). Normals are required. |
+| `--out` | `string` | Output mesh filename in `.ply` format. |
+| `--depth` | `int` | Maximum octree depth (resolution). $2^d$. Higher = more detail (and RAM). |
+| `--pointWeight` | `float` | "Screening" weight. Stick to points vs. surface smoothness. (0 = original Poisson). |
+| `--samplesPerNode`| `float` | Noise control. Use 1.0-5.0 for clean data, 15.0-20.0 for noisy data. |
+| `--scale` | `float` | Bounding box buffer. Default is 1.1. |
+| `--fullDepth` | `int` | Depth at which the octree stops being adaptive. Default is 5. |
+| `--iters` | `int` | Number of Gauss-Seidel iterations per level. Default is 8. |
+| `--threads` | `int` | Parallel processing threads. Defaults to all CPU cores. |
+| `--density` | `flag` | Export sampling density at vertices. (Required for `SurfaceTrimmer`). |
+| `--voxel` | `string` | Save the implicit function as a binary voxel grid. |
+| `--polygonMesh` | `flag` | Output polygons instead of triangulating the mesh. |
+| `--confidence` | `flag` | Use normal magnitudes as confidence information. |
+
+### 2. SurfaceTrimmer Parameters
+Poisson Recon produces "watertight" meshes. Use this tool to trim away regions with low point density (e.g., to keep holes open).
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `--in` | `string` | Input mesh from `PoissonRecon` (must have been run with `--density`). |
+| `--trim` | `float` | Density threshold. Regions lower than this are discarded. |
+| `--out` | `string` | Filename for the trimmed mesh. |
+| `--smooth` | `int` | Number of smoothing passes on the density signal before trimming. |
+| `--aRatio` | `float` | Area ratio for removing small disconnected "islands." |
+
+---
 *Original algorithm by Michael Kazhdan, Matthew Bolitho, and Hugues Hoppe.*
