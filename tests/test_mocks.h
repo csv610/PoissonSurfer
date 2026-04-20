@@ -16,7 +16,7 @@ inline void DumpOutput2( char* str , const char* format , ... ) {
     va_end( args );
     va_list args2;
     va_start( args2 , format );
-    vsprintf( str , format , args2 );
+    vsnprintf( str , 1024 , format , args2 );
     va_end( args2 );
     if( str[strlen(str)-1]=='\n' ) str[strlen(str)-1] = 0;
 }

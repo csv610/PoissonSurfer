@@ -106,16 +106,16 @@ void test_marching_cubes_get_index() {
     for (int i = 0; i < Cube::CORNERS; i++) values[i] = -1.0;
 
     unsigned char idx = MarchingCubes::GetIndex(values, 0.0);
-    assert(idx >= 0 && idx < 256);
+    (void)idx;
 
     for (int i = 0; i < Cube::CORNERS; i++) values[i] = 1.0;
     idx = MarchingCubes::GetIndex(values, 0.0);
-    assert(idx >= 0 && idx < 256);
+    (void)idx;
 
     for (int i = 0; i < 4; i++) values[i] = -1.0;
     for (int i = 4; i < 8; i++) values[i] = 1.0;
     idx = MarchingCubes::GetIndex(values, 0.0);
-    assert(idx >= 0 && idx < 256);
+    (void)idx;
 }
 
 void test_marching_cubes_has_roots() {

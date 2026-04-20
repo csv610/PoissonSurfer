@@ -51,12 +51,6 @@ void DumpOutput2( char* str , const char* format , ... );
 
 #define DEFAULT_FULL_DEPTH 5
 
-#define XSTR(x) STR(x)
-#define STR(x) #x
-#if DEFAULT_FULL_DEPTH
-#pragma message ( "[WARNING] Setting default full depth to " XSTR(DEFAULT_FULL_DEPTH) )
-#endif // DEFAULT_FULL_DEPTH
-
 #include <stdarg.h>
 char* outputFile=NULL;
 int echoStdout=0;

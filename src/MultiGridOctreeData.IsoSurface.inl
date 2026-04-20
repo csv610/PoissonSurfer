@@ -421,7 +421,7 @@ void Octree< Real >::SetSliceIsoVertices( ConstPointer( Real ) kernelDensityWeig
 										TreeOctNode* node = leaf;
 										int _depth = depth , _slice = slice;
 										bool _isNeeded = isNeeded;
-										while( _isNeeded = node->parent && Cube::IsFaceCorner( (int)(node-node->parent->children) , f[k] ) )
+										while( ( _isNeeded = node->parent && Cube::IsFaceCorner( (int)(node-node->parent->children) , f[k] ) ) )
 										{
 											node = node->parent , _depth-- , _slice >>= 1;
 											typename Octree< Real >::template SliceValues< Vertex >& _sValues = slabValues[_depth].sliceValues( _slice );
@@ -902,6 +902,7 @@ int Octree< Real >::SetIsoSurface( int depth , int offset , const SliceValues< V
 			}
 		}
 	}
+	return 0;
 }
 template< class Real > void SetIsoVertexValue(      PlyVertex< float >& vertex , Real value ){ ; }
 template< class Real > void SetIsoVertexValue( PlyValueVertex< float >& vertex , Real value ){ vertex.value = float(value); }

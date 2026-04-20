@@ -36,8 +36,8 @@ void test_method_sphere() {
     const int numPoints = 1000;
     std::vector<std::pair<Point3D<float>, Point3D<float>>> points(numPoints);
     for (int i = 0; i < numPoints; ++i) {
-        float u = (float)rand() / RAND_MAX;
-        float v = (float)rand() / RAND_MAX;
+        float u = (float)rand() / (float)RAND_MAX;
+        float v = (float)rand() / (float)RAND_MAX;
         float theta = 2.0f * 3.14159f * u;
         float phi = acos(2.0f * v - 1.0f);
         float x = 0.3f * sin(phi) * cos(theta) + 0.5f;
