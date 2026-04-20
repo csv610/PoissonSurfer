@@ -192,11 +192,13 @@ void SparseMatrix< T >::SetRowSize( int row , int count )
 }
 
 
+/*
 template<class T>
 void SparseMatrix<T>::SetZero()
 {
 	Resize(this->m_N, this->m_M);
 }
+*/
 
 template<class T>
 SparseMatrix<T> SparseMatrix<T>::operator * (const T& V) const
@@ -300,6 +302,7 @@ int SparseMatrix<T>::SolveSymmetric( const SparseMatrix<T>& M , const Vector<T2>
 	return ii;
 }
 
+/*
 // Solve for x s.t. M(x)=b by solving for x s.t. M^tM(x)=M^t(b)
 template<class T>
 int SparseMatrix<T>::Solve(const SparseMatrix<T>& M,const Vector<T>& b,int iters,Vector<T>& solution,const T eps){
@@ -327,6 +330,7 @@ int SparseMatrix<T>::Solve(const SparseMatrix<T>& M,const Vector<T>& b,int iters
 	}
 	return i;
 }
+*/
 
 
 

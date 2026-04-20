@@ -36,7 +36,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
-#include "Ply.h"
+#include "ply.h"
 
 const char *type_names[] = {
 	"invalid",
