@@ -38,6 +38,8 @@ The field of surface reconstruction is rapidly evolving, and this codebase serve
 
 ## Quick Start (Build & Test)
 
+For a detailed educational guide on how the algorithm works and how to use it, see the [User Guide](docs/UserGuide.md).
+
 ### Requirements
 - CMake 3.10+
 - A C++20 compatible compiler (Clang/GCC/MSVC)
