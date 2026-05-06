@@ -173,6 +173,35 @@ void test_marching_squares_has_roots() {
     assert(hasRoots == true || hasRoots == false);
 }
 
+void test_square_edge_corners() {
+    int c1, c2;
+    Square::EdgeCorners(0, c1, c2);
+    assert(c1 >= 0 && c1 < Square::CORNERS);
+    assert(c2 >= 0 && c2 < Square::CORNERS);
+
+    Square::EdgeCorners(3, c1, c2);
+    assert(c1 >= 0 && c1 < Square::CORNERS);
+    assert(c2 >= 0 && c2 < Square::CORNERS);
+}
+
+void test_marching_cubes_boundary_cases() {
+    double values[Cube::CORNERS];
+    for (int i = 0; i < Cube::CORNERS; i++) values[i] = 0.0;
+
+    unsigned char idx = MarchingCubes::GetIndex(values, 0.0);
+    (void)idx;
+
+    double v1 = 0.0, v2 = 0.0;
+    double result = MarchingCubes::Interpolate(v1, v2);
+    (void)result;
+}
+
+void test_marching_squares_edge_table() {
+    unsigned char idx = 0;
+    int e = MarchingSquares::edges[idx][0];
+    (void)e;
+}
+
 }
 
 int test_marching_cubes() {
@@ -191,5 +220,8 @@ int test_marching_cubes() {
     test_marching_squares_interpolate();
     test_marching_squares_get_index();
     test_marching_squares_has_roots();
+    test_square_edge_corners();
+    test_marching_cubes_boundary_cases();
+    test_marching_squares_edge_table();
     return 0;
 }

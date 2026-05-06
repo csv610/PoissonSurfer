@@ -6,6 +6,8 @@
 #include "test_sparse_matrix.h"
 #include "test_reconstruction.h"
 #include "test_reconstruction_execute.h"
+#include "test_timer.h"
+#include "test_array.h"
 #include <iostream>
 
 int main() {
@@ -64,6 +66,20 @@ int main() {
         return 1;
     }
     std::cout << "Reconstruction method tests PASSED" << std::endl;
+
+    std::cout << "=== Running Timer tests ===" << std::endl;
+    if (test_timer() != 0) {
+        std::cerr << "Timer tests FAILED" << std::endl;
+        return 1;
+    }
+    std::cout << "Timer tests PASSED" << std::endl;
+
+    std::cout << "=== Running Array tests ===" << std::endl;
+    if (test_array() != 0) {
+        std::cerr << "Array tests FAILED" << std::endl;
+        return 1;
+    }
+    std::cout << "Array tests PASSED" << std::endl;
 
     std::cout << "=== All tests PASSED ===" << std::endl;
     return 0;

@@ -148,6 +148,73 @@ void test_square_distance() {
     assert(std::abs(sqDist - 25.0) < 1e-10);
 }
 
+void test_point3d_negate() {
+    Point3D<double> p(1.0, 2.0, 3.0);
+    Point3D<double> neg = -p;
+    assert(std::abs(neg[0] + 1.0) < 1e-10);
+    assert(std::abs(neg[1] + 2.0) < 1e-10);
+    assert(std::abs(neg[2] + 3.0) < 1e-10);
+}
+
+void test_xform3x3_multiply_matrix() {
+    XForm3x3<double> m1, m2;
+    m1(0,0) = 1; m1(1,1) = 1;
+    m2(0,0) = 2; m2(1,1) = 2;
+
+    XForm3x3<double> result = m1 * m2;
+    assert(std::abs(result(0,0) - 2.0) < 1e-10);
+    assert(std::abs(result(1,1) - 2.0) < 1e-10);
+}
+
+void test_xform4x4_multiply_matrix() {
+    XForm4x4<double> m1 = XForm4x4<double>::Identity();
+    XForm4x4<double> m2 = XForm4x4<double>::Identity();
+
+    XForm4x4<double> result = m1 * m2;
+    assert(std::abs(result(0,0) - 1.0) < 1e-10);
+    assert(std::abs(result(1,1) - 1.0) < 1e-10);
+}
+
+void test_xform4x4_translate() {
+    XForm4x4<double> m = XForm4x4<double>::Identity();
+    m(0,3) = 5.0;
+    m(1,3) = 10.0;
+    m(2,3) = 15.0;
+
+    Point3D<double> p(1.0, 1.0, 1.0);
+    Point3D<double> result = m * p;
+
+    assert(std::abs(result[0] - 6.0) < 1e-10);
+    assert(std::abs(result[1] - 11.0) < 1e-10);
+    assert(std::abs(result[2] - 16.0) < 1e-10);
+}
+
+void test_xform4x4_inverse() {
+    XForm4x4<double> identity = XForm4x4<double>::Identity();
+    XForm4x4<double> inv = identity.inverse();
+
+    assert(std::abs(inv(0,0) - 1.0) < 1e-10);
+    assert(std::abs(inv(1,1) - 1.0) < 1e-10);
+    assert(std::abs(inv(2,2) - 1.0) < 1e-10);
+    assert(std::abs(inv(3,3) - 1.0) < 1e-10);
+}
+
+void test_xform4x4_transpose() {
+    XForm4x4<double> m;
+    m(0,1) = 1.0;
+    m(1,0) = 2.0;
+
+    XForm4x4<double> mt = m.transpose();
+    assert(std::abs(mt(0,1) - 2.0) < 1e-10);
+    assert(std::abs(mt(1,0) - 1.0) < 1e-10);
+}
+
+void test_xform4x4_determinant() {
+    XForm4x4<double> identity = XForm4x4<double>::Identity();
+    double det = identity.determinant();
+    assert(std::abs(det - 1.0) < 1e-10);
+}
+
 }
 
 int test_geometry() {
@@ -167,5 +234,12 @@ int test_geometry() {
     test_cross_product();
     test_square_length();
     test_square_distance();
+    test_point3d_negate();
+    test_xform3x3_multiply_matrix();
+    test_xform4x4_multiply_matrix();
+    test_xform4x4_translate();
+    test_xform4x4_inverse();
+    test_xform4x4_transpose();
+    test_xform4x4_determinant();
     return 0;
 }

@@ -30,11 +30,34 @@ void test_matrix_entry_constructor() {
     assert(std::abs(e3.Value - 2.5) < 1e-10);
 }
 
+void test_sparse_matrix_constructor_different_sizes() {
+    SparseMatrix<double> m1(3);
+    SparseMatrix<double> m2(5);
+    assert(m1.rows == 3);
+    assert(m2.rows == 5);
+}
+
+void test_sparse_matrix_row_count() {
+    SparseMatrix<double> m(5);
+    assert(m.RowSize(0) == 0);
+    assert(m.RowSize(1) == 0);
+    assert(m.RowSize(4) == 0);
+}
+
+void test_sparse_matrix_copy() {
+    SparseMatrix<double> m1(3);
+    SparseMatrix<double> m2(m1);
+    assert(m2.rows == 3);
+}
+
 }
 
 int test_sparse_matrix() {
     test_sparse_matrix_constructor();
     test_sparse_matrix_resize();
     test_matrix_entry_constructor();
+    test_sparse_matrix_constructor_different_sizes();
+    test_sparse_matrix_row_count();
+    test_sparse_matrix_copy();
     return 0;
 }

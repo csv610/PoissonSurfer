@@ -67,6 +67,28 @@ void test_vector_normalize() {
     assert(std::abs(v(1) - 0.8) < 1e-10);
 }
 
+void test_vector_copy_constructor() {
+    Vector<double> v1(3);
+    v1(0) = 1; v1(1) = 2; v1(2) = 3;
+
+    Vector<double> v2(v1);
+    assert(v2.Dimensions() == 3);
+    assert(std::abs(v2(0) - 1.0) < 1e-10);
+    assert(std::abs(v2(1) - 2.0) < 1e-10);
+    assert(std::abs(v2(2) - 3.0) < 1e-10);
+}
+
+void test_vector_assignment() {
+    Vector<double> v1(3);
+    v1(0) = 1; v1(1) = 2; v1(2) = 3;
+
+    Vector<double> v2(3);
+    v2 = v1;
+    assert(std::abs(v2(0) - 1.0) < 1e-10);
+    assert(std::abs(v2(1) - 2.0) < 1e-10);
+    assert(std::abs(v2(2) - 3.0) < 1e-10);
+}
+
 }
 
 int test_vector() {
@@ -76,5 +98,7 @@ int test_vector() {
     test_vector_dot();
     test_vector_length();
     test_vector_normalize();
+    test_vector_copy_constructor();
+    test_vector_assignment();
     return 0;
 }
