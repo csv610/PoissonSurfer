@@ -6,8 +6,8 @@
 #include "../src/Geometry.h"
 #include "../src/PointStream.h"
 
-// Forward declaration of Execute from PoissonRecon.cpp (it needs to be available)
-// However, Execute is a template in PoissonRecon.cpp. 
+// Forward declaration of Execute from surfrecon.cpp (it needs to be available)
+// However, Execute is a template in surfrecon.cpp. 
 // It might be better to just run the executable via shell if we want to test "the method" as an end-user.
 // But the user asked to "add test... by the method", which usually implies programmatic.
 
@@ -50,7 +50,7 @@ void test_method_sphere() {
     
     // We will use the system command to run the built executable as it's the most reliable way 
     // to test "the method" including all CLI parsing and setup.
-    int ret = system("./PoissonRecon --in sphere_in.ply --out sphere_out.ply --depth 6 --verbose");
+    int ret = system("./surfrecon --in sphere_in.ply --out sphere_out.ply --depth 6 --verbose");
     assert(ret == 0);
     
     // Check if output exists
@@ -81,7 +81,7 @@ void test_method_cube() {
     add_face({ 0, 0,-1}, {1, 0, 0}, {0, 1, 0});
     
     write_ply("cube_in.ply", points);
-    int ret = system("./PoissonRecon --in cube_in.ply --out cube_out.ply --depth 6 --verbose");
+    int ret = system("./surfrecon --in cube_in.ply --out cube_out.ply --depth 6 --verbose");
     assert(ret == 0);
     
     FILE* fp = fopen("cube_out.ply", "r");

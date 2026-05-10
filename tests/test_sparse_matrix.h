@@ -39,9 +39,9 @@ void test_sparse_matrix_constructor_different_sizes() {
 
 void test_sparse_matrix_row_count() {
     SparseMatrix<double> m(5);
-    assert(m.RowSize(0) == 0);
-    assert(m.RowSize(1) == 0);
-    assert(m.RowSize(4) == 0);
+    assert(m.rowSizes[0] == 0);
+    assert(m.rowSizes[1] == 0);
+    assert(m.rowSizes[4] == 0);
 }
 
 void test_sparse_matrix_copy() {

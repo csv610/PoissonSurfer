@@ -177,9 +177,9 @@ void test_xform4x4_multiply_matrix() {
 
 void test_xform4x4_translate() {
     XForm4x4<double> m = XForm4x4<double>::Identity();
-    m(0,3) = 5.0;
-    m(1,3) = 10.0;
-    m(2,3) = 15.0;
+    m(3,0) = 5.0;
+    m(3,1) = 10.0;
+    m(3,2) = 15.0;
 
     Point3D<double> p(1.0, 1.0, 1.0);
     Point3D<double> result = m * p;

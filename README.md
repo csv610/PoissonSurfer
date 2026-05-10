@@ -60,14 +60,14 @@ make run_tests
 
 ### Usage
 ```bash
-./PoissonRecon --in input.ply --out output.ply --depth 10
+./surfrecon --in input.ply --out output.ply --depth 10
 ```
 
 ---
 
 ## Parameter Reference
 
-### 1. PoissonRecon Parameters
+### 1. surfrecon Parameters
 The core engine for surface reconstruction.
 
 | Parameter | Type | Description |
@@ -81,17 +81,17 @@ The core engine for surface reconstruction.
 | `--fullDepth` | `int` | Depth at which the octree stops being adaptive. Default is 5. |
 | `--iters` | `int` | Number of Gauss-Seidel iterations per level. Default is 8. |
 | `--threads` | `int` | Parallel processing threads. Defaults to all CPU cores. |
-| `--density` | `flag` | Export sampling density at vertices. (Required for `SurfaceTrimmer`). |
+| `--density` | `flag` | Export sampling density at vertices. (Required for `surftrimmer`). |
 | `--voxel` | `string` | Save the implicit function as a binary voxel grid. |
 | `--polygonMesh` | `flag` | Output polygons instead of triangulating the mesh. |
 | `--confidence` | `flag` | Use normal magnitudes as confidence information. |
 
-### 2. SurfaceTrimmer Parameters
+### 2. surftrimmer Parameters
 Poisson Recon produces "watertight" meshes. Use this tool to trim away regions with low point density (e.g., to keep holes open).
 
 | Parameter | Type | Description |
 | :--- | :--- | :--- |
-| `--in` | `string` | Input mesh from `PoissonRecon` (must have been run with `--density`). |
+| `--in` | `string` | Input mesh from `surfrecon` (must have been run with `--density`). |
 | `--trim` | `float` | Density threshold. Regions lower than this are discarded. |
 | `--out` | `string` | Filename for the trimmed mesh. |
 | `--smooth` | `int` | Number of smoothing passes on the density signal before trimming. |

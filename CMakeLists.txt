@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
-project(PoissonRecon LANGUAGES CXX C)
+project(surfrecon LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenMP REQUIRED)
+find_package(assimp REQUIRED)
 
 set(COMMON_SOURCES
     Src/CmdLineParser.cpp
@@ -14,19 +15,26 @@ set(COMMON_SOURCES
     Src/plyfile.cpp
 )
 
-add_executable(PoissonRecon
+add_executable(surfrecon
     ${COMMON_SOURCES}
     Src/PoissonRecon.cpp
 )
-target_include_directories(PoissonRecon PRIVATE Src)
-target_link_libraries(PoissonRecon PRIVATE OpenMP::OpenMP_CXX)
+target_include_directories(surfrecon PRIVATE Src)
+target_link_libraries(surfrecon PRIVATE OpenMP::OpenMP_CXX)
 
-add_executable(SurfaceTrimmer
+add_executable(surftrimmer
     ${COMMON_SOURCES}
     Src/SurfaceTrimmer.cpp
 )
-target_include_directories(SurfaceTrimmer PRIVATE Src)
-target_link_libraries(SurfaceTrimmer PRIVATE OpenMP::OpenMP_CXX)
+target_include_directories(surftrimmer PRIVATE Src)
+target_link_libraries(surftrimmer PRIVATE OpenMP::OpenMP_CXX)
+
+add_executable(surfremesh
+    ${COMMON_SOURCES}
+    Src/surfremesh.cpp
+)
+target_include_directories(surfremesh PRIVATE Src)
+target_link_libraries(surfremesh PRIVATE OpenMP::OpenMP_CXX assimp::assimp)
 
 enable_testing()
 
@@ -52,12 +60,12 @@ target_link_libraries(run_tests PRIVATE OpenMP::OpenMP_CXX)
 target_compile_definitions(run_tests PRIVATE POISSON_RECON_TESTING)
 
 if(MSVC)
-    target_compile_definitions(PoissonRecon PRIVATE _CRT_SECURE_NO_WARNINGS)
-    target_compile_definitions(SurfaceTrimmer PRIVATE _CRT_SECURE_NO_WARNINGS)
+    target_compile_definitions(surfrecon PRIVATE _CRT_SECURE_NO_WARNINGS)
+    target_compile_definitions(surftrimmer PRIVATE _CRT_SECURE_NO_WARNINGS)
     target_compile_definitions(run_tests PRIVATE _CRT_SECURE_NO_WARNINGS)
 else()
-    target_compile_options(PoissonRecon PRIVATE -Wno-deprecated)
-    target_compile_options(SurfaceTrimmer PRIVATE -Wno-deprecated)
+    target_compile_options(surfrecon PRIVATE -Wno-deprecated)
+    target_compile_options(surftrimmer PRIVATE -Wno-deprecated)
 endif()
 
 add_test(NAME AllTests COMMAND run_tests)

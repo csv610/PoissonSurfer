@@ -48,7 +48,7 @@ cmake ..
 make -j$(sysctl -n hw.ncpu)
 ```
 
-This will produce two main executables: `PoissonRecon` (the engine) and `SurfaceTrimmer` (the scalpel).
+This will produce two main executables: `surfrecon` (the engine) and `surftrimmer` (the scalpel).
 
 ---
 
@@ -57,7 +57,7 @@ This will produce two main executables: `PoissonRecon` (the engine) and `Surface
 To run a basic reconstruction, you need an oriented point cloud in `.ply` format. "Oriented" means every point must have a normal vector $(nx, ny, nz)$ telling the computer which way is "out."
 
 ```bash
-./PoissonRecon --in dragon_points.ply --out dragon_mesh.ply --depth 8
+./surfrecon --in dragon_points.ply --out dragon_mesh.ply --depth 8
 ```
 
 ### What just happened?
@@ -90,15 +90,15 @@ Think of this as a "minimum density" requirement.
 
 ## Chapter 5: Post-Processing with Surface Trimmer
 
-Poisson Reconstruction creates **watertight** meshes. If you scan a flat piece of paper, it will try to "close" it into a balloon. To fix this, we use `SurfaceTrimmer`.
+Poisson Reconstruction creates **watertight** meshes. If you scan a flat piece of paper, it will try to "close" it into a balloon. To fix this, we use `surftrimmer`.
 
 1.  **Run Recon with Density:**
     ```bash
-    ./PoissonRecon --in scan.ply --out mesh.ply --density
+    ./surfrecon --in scan.ply --out mesh.ply --density
     ```
 2.  **Trim Low-Density Regions:**
     ```bash
-    ./SurfaceTrimmer --in mesh.ply --trim 5.0 --out trimmed.ply
+    ./surftrimmer --in mesh.ply --trim 5.0 --out trimmed.ply
     ```
 This removes parts of the mesh where there were very few input points (the "guessed" parts).
 
@@ -111,7 +111,7 @@ This removes parts of the mesh where there were very few input points (the "gues
 | **Inside-Out Mesh** | Normals are flipped. | Check your scanner software or use a tool to flip normals. |
 | **Crashes at High Depth** | Out of Memory. | Decrease `--depth` or increase swap space. |
 | **"Bubbly" Surface** | Too much noise. | Increase `--samplesPerNode`. |
-| **Holes are closed** | Intended behavior. | Use `SurfaceTrimmer` as shown in Chapter 5. |
+| **Holes are closed** | Intended behavior. | Use `surftrimmer` as shown in Chapter 5. |
 
 ---
 
