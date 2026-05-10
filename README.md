@@ -108,6 +108,18 @@ Poisson Recon produces "watertight" meshes. Use this tool to trim away regions w
 
 ---
 
+## Handling Large Datasets
+
+When working with massive point clouds (millions of points), follow these strategies to optimize performance and prevent memory crashes:
+
+1.  **Balance Resolution (`--depth`):** This is the most critical parameter. Memory usage scales at $O(8^d)$. A depth of 10 is usually the sweet spot for high detail on a consumer machine (16GB RAM).
+2.  **Noise Control (`--samplesPerNode`):** For noisy sensor data, increase this to `5.0`–`15.0`. This prevents the octree from over-subdividing in noisy regions, significantly reducing RAM usage.
+3.  **Streamed I/O:** The engine uses a `PointStream` architecture, meaning it reads input points sequentially. You don't need to fit the entire input file into RAM to process it.
+4.  **Density Trimming:** Use the `--density` flag in `surfrecon`, then follow up with `surftrimmer` to remove "ghost" geometry in areas with low point coverage.
+5.  **Out-of-Core Processing:** The system automatically utilizes `CoredFileMeshData` to spool generated triangles to disk, allowing it to produce meshes larger than the available system memory.
+
+---
+
 ## Technical Notes
 
 ### Understanding the `--depth` Parameter
