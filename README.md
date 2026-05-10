@@ -86,7 +86,16 @@ The core engine for surface reconstruction.
 | `--polygonMesh` | `flag` | Output polygons instead of triangulating the mesh. |
 | `--confidence` | `flag` | Use normal magnitudes as confidence information. |
 
-### 2. surftrimmer Parameters
+### 2. surfremesh Parameters
+A utility to remesh existing models by sampling points from their triangles.
+
+| Parameter | Type | Description |
+| :--- | :--- | :--- |
+| `-i` | `string` | **Required.** Input mesh file (supports OBJ, STL, PLY, etc. via Assimp). |
+| `-o` | `string` | **Required.** Output PLY filename for the remeshed result. |
+| `-d` | `int` | Reconstruction depth. Default is 8. |
+
+### 3. surftrimmer Parameters
 Poisson Recon produces "watertight" meshes. Use this tool to trim away regions with low point density (e.g., to keep holes open).
 
 | Parameter | Type | Description |
@@ -96,6 +105,21 @@ Poisson Recon produces "watertight" meshes. Use this tool to trim away regions w
 | `--out` | `string` | Filename for the trimmed mesh. |
 | `--smooth` | `int` | Number of smoothing passes on the density signal before trimming. |
 | `--aRatio` | `float` | Area ratio for removing small disconnected "islands." |
+
+---
+
+## Technical Notes
+
+### Understanding the `--depth` Parameter
+The `--depth` ($d$) parameter determines the resolution of the reconstruction grid ($2^d \times 2^d \times 2^d$).
+
+| Limit Type | Value | Reason |
+| :--- | :--- | :--- |
+| **Bit-Packing Limit** | **19** | The octree packs depth and 3D offsets into a 64-bit integer, allocating 19 bits per dimension ($2^{19}$). |
+| **Integer Overflow** | **30** | Internal calculations using `1 << depth` will overflow standard 32-bit signed integers above this value. |
+| **Practical RAM Limit**| **10 - 13** | Memory usage grows at $O(8^d)$. $d=10$ uses ~2GB; $d=12$ uses ~16GB; $d=14$ requires workstation-class RAM (64GB+). |
+
+**Recommendation:** Use depth **8-10** for most high-quality scans. Depths above **12** are rarely needed and require significant hardware resources.
 
 ---
 *Original algorithm by Michael Kazhdan, Matthew Bolitho, and Hugues Hoppe.*
