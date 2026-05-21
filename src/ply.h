@@ -30,8 +30,11 @@
 		 
 */
 
-#ifndef __PLY_H__
-#define __PLY_H__
+#ifndef PLY_H
+#define PLY_H
+
+#include <stdexcept>
+#include <string>
 
 #ifndef WIN32
 #define _strdup strdup
@@ -157,11 +160,7 @@ extern char *my_alloc();
 	(PTR) = (TYPE *)realloc((PTR),(NEW_N)*sizeof(TYPE));			\
 	if (((PTR) == NULL) && ((NEW_N) != 0))					\
 {									\
-	fprintf(stderr, "Memory reallocation failed on line %d in %s\n", 	\
-	__LINE__, __FILE__);                             		\
-	fprintf(stderr, "  tried to reallocate %d->%d\n",       		\
-	(OLD_N), (NEW_N));                              		\
-	exit(-1);								\
+	throw std::runtime_error(std::string("Memory reallocation failed on line ") + std::to_string(__LINE__) + " in " + __FILE__ + " tried to reallocate " + std::to_string(OLD_N) + "->" + std::to_string(NEW_N)); \
 }									\
 	if ((NEW_N)>(OLD_N))							\
 	memset((char *)(PTR)+(OLD_N)*sizeof(TYPE), 0,			\
@@ -172,9 +171,7 @@ extern char *my_alloc();
 #define  ALLOCN(PTR,TYPE,N) 					\
 { (PTR) = (TYPE *) calloc(((unsigned)(N)),sizeof(TYPE));\
 	if ((PTR) == NULL) {    				\
-	fprintf(stderr, "Memory allocation failed on line %d in %s\n", \
-	__LINE__, __FILE__);                           \
-	exit(-1);                                             \
+	throw std::runtime_error(std::string("Memory allocation failed on line ") + std::to_string(__LINE__) + " in " + __FILE__); \
 	}							\
 }
 
@@ -193,8 +190,8 @@ extern void ply_element_count(PlyFile *, const char *, int);
 extern void ply_header_complete(PlyFile *);
 extern void ply_put_element_setup(PlyFile *, const char *);
 extern void ply_put_element(PlyFile *, void *);
-extern void ply_put_comment(PlyFile *, char *);
-extern void ply_put_obj_info(PlyFile *, char *);
+extern void ply_put_comment(PlyFile *, const char *);
+extern void ply_put_obj_info(PlyFile *, const char *);
 extern PlyFile *ply_read(FILE *, int *, char ***);
 extern PlyFile *ply_open_for_reading( char *, int *, char ***, int *, float *);
 extern PlyProperty **ply_get_element_description(PlyFile *, char *, int*, int*);
@@ -220,13 +217,13 @@ extern int equal_strings(const char *, const char *);
 #include "Geometry.h"
 #include <vector>
 
-template< class Real > int PLYType( void );
-template<> inline int PLYType< int           >( void ){ return PLY_INT   ; }
-template<> inline int PLYType<          char >( void ){ return PLY_CHAR  ; }
-template<> inline int PLYType< unsigned char >( void ){ return PLY_UCHAR ; }
-template<> inline int PLYType<        float  >( void ){ return PLY_FLOAT ; }
-template<> inline int PLYType<        double >( void ){ return PLY_DOUBLE; }
-template< class Real > inline int PLYType( void ){ fprintf( stderr , "[ERROR] Unrecognized type\n" ) , exit( 0 ); }
+template< class Real > int PLYType();
+template<> inline int PLYType< int           >(){ return PLY_INT   ; }
+template<> inline int PLYType<          char >(){ return PLY_CHAR  ; }
+template<> inline int PLYType< unsigned char >(){ return PLY_UCHAR ; }
+template<> inline int PLYType<        float  >(){ return PLY_FLOAT ; }
+template<> inline int PLYType<        double >(){ return PLY_DOUBLE; }
+template< class Real > inline int PLYType(){ throw std::runtime_error( "[ERROR] Unrecognized type" ); }
 
 typedef struct PlyFace
 {
@@ -248,7 +245,7 @@ public:
 
 	Point3D< Real > point;
 
-	PlyVertex( void ) { ; }
+	PlyVertex() { ; }
 	PlyVertex( Point3D< Real > p ) { point=p; }
 	PlyVertex operator + ( PlyVertex p ) const { return PlyVertex( point+p.point ); }
 	PlyVertex operator - ( PlyVertex p ) const { return PlyVertex( point-p.point ); }
@@ -276,7 +273,7 @@ public:
 	Point3D<Real> point;
 	Real value;
 
-	PlyValueVertex( void ) : value( Real(0) ) { ; }
+	PlyValueVertex() : value( Real(0) ) { ; }
 	PlyValueVertex( Point3D< Real > p , Real v ) : point(p) , value(v) { ; }
 	PlyValueVertex operator + ( PlyValueVertex p ) const { return PlyValueVertex( point+p.point , value+p.value ); }
 	PlyValueVertex operator - ( PlyValueVertex p ) const { return PlyValueVertex( point-p.value , value-p.value ); }
@@ -305,7 +302,7 @@ public:
 
 	Point3D<Real> point , normal;
 
-	PlyOrientedVertex( void ) { ; }
+	PlyOrientedVertex() { ; }
 	PlyOrientedVertex( Point3D< Real > p , Point3D< Real > n ) : point(p) , normal(n) { ; }
   	PlyOrientedVertex operator + ( PlyOrientedVertex p ) const { return PlyOrientedVertex( point+p.point , normal+p.normal ); }
 	PlyOrientedVertex operator - ( PlyOrientedVertex p ) const { return PlyOrientedVertex( point-p.point , normal-p.normal ); }
@@ -339,7 +336,7 @@ public:
 
 	operator Point3D<Real>& ()					{return point;}
 	operator const Point3D<Real>& () const		{return point;}
-	PlyColorVertex(void)						{point.coords[0]=point.coords[1]=point.coords[2]=0,color[0]=color[1]=color[2]=0;}
+	PlyColorVertex()						{point.coords[0]=point.coords[1]=point.coords[2]=0,color[0]=color[1]=color[2]=0;}
 	PlyColorVertex(const Point3D<Real>& p)	{point=p;}
 };
 template< class Real >
@@ -354,10 +351,10 @@ PlyProperty PlyColorVertex< Real >::Properties[]=
 };
 
 template< class Vertex , class Real >
-int PlyWritePolygons( char* fileName , CoredMeshData< Vertex >*  mesh , int file_type , const Point3D< float >& translate , float scale , char** comments=NULL , int commentNum=0 , XForm4x4< Real > xForm=XForm4x4< Real >::Identity() );
+int PlyWritePolygons( char* fileName , CoredMeshData< Vertex >*  mesh , int file_type , const Point3D< float >& translate , float scale , const char** comments=NULL , int commentNum=0 , XForm4x4< Real > xForm=XForm4x4< Real >::Identity() );
 
 template< class Vertex , class Real >
-int PlyWritePolygons( char* fileName , CoredMeshData< Vertex >*  mesh , int file_type , char** comments=NULL , int commentNum=0 , XForm4x4< Real > xForm=XForm4x4< Real >::Identity() );
+int PlyWritePolygons( char* fileName , CoredMeshData< Vertex >*  mesh , int file_type , const char** comments=NULL , int commentNum=0 , XForm4x4< Real > xForm=XForm4x4< Real >::Identity() );
 
 template<class Vertex>
 int PlyReadPolygons(char* fileName,
@@ -371,14 +368,14 @@ int PlyWritePolygons(char* fileName,
 					 const std::vector<Vertex>& vertices,const std::vector<std::vector<int> >& polygons,
 					 PlyProperty* properties,int propertyNum,
 					 int file_type,
-					 char** comments=NULL,const int& commentNum=0);
+					 const char** comments=NULL,const int& commentNum=0);
 
 template<class Vertex>
 int PlyWritePolygons(char* fileName,
 					 const std::vector<Vertex>& vertices , const std::vector< std::vector< int > >& polygons,
 					 PlyProperty* properties,int propertyNum,
 					 int file_type,
-					 char** comments,const int& commentNum)
+					 const char** comments,const int& commentNum)
 {
 	int nr_vertices=int(vertices.size());
 	int nr_faces=int(polygons.size());
@@ -546,7 +543,7 @@ int PlyReadPolygons(char* fileName,
 }
 
 template< class Vertex , class Real >
-int PlyWritePolygons( char* fileName , CoredMeshData< Vertex >* mesh , int file_type , const Point3D<float>& translate , float scale , char** comments , int commentNum , XForm4x4< Real > xForm )
+int PlyWritePolygons( char* fileName , CoredMeshData< Vertex >* mesh , int file_type , const Point3D<float>& translate , float scale , const char** comments , int commentNum , XForm4x4< Real > xForm )
 {
 	int i;
 	int nr_vertices=int(mesh->outOfCorePointCount()+mesh->inCorePoints.size());
@@ -609,8 +606,9 @@ int PlyWritePolygons( char* fileName , CoredMeshData< Vertex >* mesh , int file_
 	ply_close( ply );
 	return 1;
 }
-template< class Vertex , class Real >
-int PlyWritePolygons( char* fileName , CoredMeshData< Vertex >* mesh , int file_type , char** comments , int commentNum , XForm4x4< Real > xForm )
+template<class Vertex, class Real>
+int PlyWritePolygons(char* fileName, CoredMeshData<Vertex>* mesh, int file_type, const char** comments, int commentNum, XForm4x4<Real> xForm)
+
 {
 	int i;
 	int nr_vertices=int(mesh->outOfCorePointCount()+mesh->inCorePoints.size());
@@ -673,6 +671,6 @@ int PlyWritePolygons( char* fileName , CoredMeshData< Vertex >* mesh , int file_
 	ply_close( ply );
 	return 1;
 }
-inline int PlyDefaultFileType(void){return PLY_ASCII;}
+inline int PlyDefaultFileType(){return PLY_ASCII;}
 
-#endif /* !__PLY_H__ */
+#endif /* !PLY_H */

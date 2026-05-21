@@ -19,8 +19,6 @@ void test_ppolynomial_set() {
 
     StartingPolynomial<0> sps[1] = {sp};
     pp.set(sps, 1);
-
-    assert(pp.size() >= 0);
 }
 
 void test_ppolynomial_evaluation() {
@@ -33,34 +31,27 @@ void test_ppolynomial_evaluation() {
     pp.set(sps, 1);
 
     double result = pp(0.5);
-    assert(result == result);
+    assert(result == 2.0);
 }
 
 void test_ppolynomial_integral() {
     PPolynomial<0> pp;
-    assert(pp.size() == 0);
 }
 
 void test_ppolynomial_Integral() {
     PPolynomial<0> pp;
-    assert(pp.size() == 0);
 }
 
 void test_ppolynomial_add() {
     PPolynomial<0> pp1, pp2;
-    assert(pp1.size() == 0);
-    assert(pp2.size() == 0);
 }
 
 void test_ppolynomial_scale_empty() {
     PPolynomial<0> pp1, pp2;
-    assert(pp1.size() == 0);
-    assert(pp2.size() == 0);
 }
 
 void test_starting_polynomial_constructor() {
     StartingPolynomial<0> sp;
-    assert(sp.start >= 0.0 || sp.start < 0.0);
 }
 
 void test_starting_polynomial_shift() {
@@ -69,7 +60,7 @@ void test_starting_polynomial_shift() {
     sp.p.coefficients[0] = 1.0;
 
     StartingPolynomial<0> shifted = sp.shift(1.0);
-    assert(shifted.start >= 0.0 || shifted.start < 0.0);
+    assert(shifted.start == 1.0);
 }
 
 void test_starting_polynomial_scale() {
@@ -78,17 +69,15 @@ void test_starting_polynomial_scale() {
     sp.p.coefficients[0] = 1.0;
 
     StartingPolynomial<0> scaled = sp.scale(2.0);
-    assert(scaled.p.coefficients[0] >= 0.0 || scaled.p.coefficients[0] < 0.0);
+    assert(scaled.p.coefficients[0] == 1.0);
 }
 
 void test_ppolynomial_bspline() {
     PPolynomial<2> bp = PPolynomial<2>::BSpline();
-    assert(bp.size() >= 0);
 }
 
 void test_ppolynomial_derivative() {
     PPolynomial<1> pp;
-    assert(pp.size() >= 0);
 }
 
 void test_ppolynomial_copy_constructor() {
@@ -100,7 +89,6 @@ void test_ppolynomial_copy_constructor() {
     pp1.set(sps, 1);
 
     PPolynomial<0> pp2(pp1);
-    assert(pp2.size() >= 0);
 }
 
 void test_ppolynomial_assignment() {
@@ -113,15 +101,12 @@ void test_ppolynomial_assignment() {
 
     PPolynomial<0> pp2;
     pp2 = pp1;
-    assert(pp2.size() >= 0);
 }
 
 void test_ppolynomial_reset() {
     PPolynomial<0> pp;
     pp.set(5);
-    assert(pp.size() >= 0);
     pp.reset(3);
-    assert(pp.size() >= 0);
 }
 
 void test_ppolynomial_integral_range() {
@@ -146,7 +131,7 @@ void test_ppolynomial_scale() {
 
     PPolynomial<0> scaled = pp1.scale(2.0);
     double result = scaled(0.5);
-    assert(result == result);
+    assert(result == 1.0);
 }
 
 void test_ppolynomial_shift() {
@@ -158,7 +143,6 @@ void test_ppolynomial_shift() {
     pp1.set(sps, 1);
 
     PPolynomial<0> shifted = pp1.shift(1.0);
-    assert(shifted.size() >= 0);
 }
 
 void test_starting_polynomial_multiply() {
@@ -187,7 +171,7 @@ void test_starting_polynomial_less_than() {
     sp2.start = 1.0;
 
     bool less = sp1 < sp2;
-    assert(less == true || less == false);
+    assert(less == true);
 }
 
 }

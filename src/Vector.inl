@@ -26,8 +26,8 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 */
 
-#ifndef __VECTORIMPL_HPP
-#define __VECTORIMPL_HPP
+#ifndef VECTOR_INL
+#define VECTOR_INL
 
 #include <string.h>
 
@@ -35,7 +35,7 @@ DAMAGE.
 // Vector //
 ////////////
 template<class T>
-Vector<T>::Vector( void )
+Vector<T>::Vector()
 {
 	m_N = 0;
 	m_pV = NullPointer< T >();
@@ -70,8 +70,18 @@ void Vector<T>::Resize( size_t N )
 template<class T>
 Vector<T>::Vector( size_t N, ConstPointer( T ) pV )
 {
+	m_N = 0;
+	m_pV = NullPointer< T >();
 	Resize(N);
-	memcpy( m_pV, pV, N*sizeof(T) );
+	memcpy( PointerAddress(m_pV), PointerAddress(pV), N*sizeof(T) );
+}
+template<class T>
+Vector<T>::Vector( std::span<const T> s )
+{
+	m_N = 0;
+	m_pV = NullPointer< T >();
+	Resize(s.size());
+	memcpy( PointerAddress(m_pV), s.data(), m_N*sizeof(T) );
 }
 template<class T>
 Vector<T>::~Vector(){Resize(0);}
@@ -85,7 +95,7 @@ Vector<T>& Vector<T>::operator = (const Vector& V)
 template<class T>
 size_t Vector<T>::Dimensions() const{return m_N;}
 template<class T>
-void Vector<T>::SetZero(void){for (size_t i=0; i<m_N; i++){m_pV[i] = T(0);}}
+void Vector<T>::SetZero(){for (size_t i=0; i<m_N; i++){m_pV[i] = T(0);}}
 template<class T>
 const T& Vector<T>::operator () (size_t i) const
 {
@@ -188,7 +198,7 @@ Vector<T>& Vector<T>::operator -= (const Vector<T>& V)
 }
 
 template<class T>
-Vector<T> Vector<T>::operator - (void) const
+Vector<T> Vector<T>::operator - () const
 {
 	Vector<T> V(m_N);
 	for (size_t i=0; i<m_N; i++) V.m_pV[i] = -m_pV[i];
@@ -231,8 +241,8 @@ T Vector<T>::Norm( size_t Ln ) const
 {
 	T N = T();
 	for (size_t i = 0; i<m_N; i++)
-		N += pow(m_pV[i], (T)Ln);
-	return pow(N, (T)1.0/Ln);	
+		N += pow(m_pV[i], static_cast<T>(Ln));
+	return pow(N, static_cast<T>(1.0)/Ln);	
 }
 template<class T>
 void Vector<T>::Normalize()
@@ -242,7 +252,7 @@ void Vector<T>::Normalize()
 		m_pV[i] *= N;
 }
 template< class T >
-T Vector< T >::Average( void ) const
+T Vector< T >::Average() const
 {
 	T N = T();
 	for( size_t i=0 ; i<m_N ; i++ ) N += m_pV[i];

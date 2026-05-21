@@ -1592,11 +1592,11 @@ int Octree< Real >::GetSliceMatrixAndUpdateConstraints( const PointInfo& pointIn
 		}
 
 		// Set the row entries
-		if( insetSupported ) matrix.rowSizes[i] = SetMatrixRow( pointInfo , neighbors5 , matrix[i] , sNodes.nodeCount[depth] , integrator , stencil , false );
+		if( insetSupported ) matrix.rowSize(i) = SetMatrixRow( pointInfo , neighbors5 , matrix[i] , sNodes.nodeCount[depth] , integrator , stencil , false );
 		else
 		{
 			matrix[i][0] = MatrixEntry< Real >( i , Real(1) );
-			matrix.rowSizes[i] = 1;
+			matrix.rowSize(i) = 1;
 		}
 
 		if( depth>_minDepth )
@@ -1645,11 +1645,11 @@ int Octree< Real >::GetMatrixAndUpdateConstraints( const PointInfo& pointInfo , 
 		matrix.SetRowSize( i , count );
 
 		// Set the row entries
-		if( insetSupported ) matrix.rowSizes[i] = SetMatrixRow( pointInfo , neighbors5 , matrix[i] , (int)start , integrator , stencil , true );
+		if( insetSupported ) matrix.rowSize(i) = SetMatrixRow( pointInfo , neighbors5 , matrix[i] , (int)start , integrator , stencil , true );
 		else
 		{
 			matrix[i][0] = MatrixEntry< Real >( i , Real(1) );
-			matrix.rowSizes[i] = 1;
+			matrix.rowSize(i) = 1;
 		}
 		if( depth>_minDepth )
 		{
@@ -1804,11 +1804,11 @@ int Octree< Real >::_SolveSystemGS( PointInfo& pointInfo , int depth , const typ
 				}
 				if( showResidual || inRNorm2 )
 #pragma omp parallel for num_threads( threads ) reduction( + : bNorm , inRNorm )
-					for( int j=0 ; j<_M[_s].rows ; j++ )
+					for( int j=0 ; j<_M[_s].rows() ; j++ )
 					{
 						Real temp = Real(0);
 						ConstPointer( MatrixEntry< Real > ) start = _M[_s][j];
-						ConstPointer( MatrixEntry< Real > ) end = start + _M[_s].rowSizes[j];
+						ConstPointer( MatrixEntry< Real > ) end = start + _M[_s].rowSize(j);
 						ConstPointer( MatrixEntry< Real > ) e;
 						for( e=start ; e!=end ; e++ ) temp += X[ e->N ] * e->Value;
 						Real b = B[ j + offsets[s] ] ;
@@ -1817,7 +1817,7 @@ int Octree< Real >::_SolveSystemGS( PointInfo& pointInfo , int depth , const typ
 					}
 				else if( bNorm2 )
 #pragma omp parallel for num_threads( threads ) reduction( + : bNorm )
-					for( int j=0 ; j<_M[_s].rows ; j++ )
+					for( int j=0 ; j<_M[_s].rows() ; j++ )
 					{
 						Real b = B[ j + offsets[s] ] ;
 						bNorm += b*b;
@@ -1841,11 +1841,11 @@ int Octree< Real >::_SolveSystemGS( PointInfo& pointInfo , int depth , const typ
 			{
 				int s = backSlice-backOffset*dir , _s = s % matrixSlices;
 #pragma omp parallel for num_threads( threads ) reduction( + : outRNorm )
-				for( int j=0 ; j<_M[_s].rows ; j++ )
+				for( int j=0 ; j<_M[_s].rows() ; j++ )
 				{
 					Real temp = Real(0);
 					ConstPointer( MatrixEntry< Real > ) start = _M[_s][j];
-					ConstPointer( MatrixEntry< Real > ) end = start + _M[_s].rowSizes[j];
+					ConstPointer( MatrixEntry< Real > ) end = start + _M[_s].rowSize(j);
 					ConstPointer( MatrixEntry< Real > ) e;
 					for( e=start ; e!=end ; e++ ) temp += X[ e->N ] * e->Value;
 					Real b = B[ j + offsets[s] ];
@@ -1936,12 +1936,12 @@ int Octree< Real >::_SolveSystemCG( PointInfo& pointInfo , int depth , const typ
 
 	solveTime = Time();
 	// Solve the linear system
-	accuracy = Real( accuracy / 100000 ) * M.rows;
+	accuracy = Real( accuracy / 100000 ) * M.rows();
 	int res = 1<<depth;
 
 	MapReduceVector< Real > mrVector;
-	mrVector.resize( threads , M.rows );
-	bool addDCTerm = (M.rows==res*res*res && !_constrainValues && _boundaryType!=-1);
+	mrVector.resize( threads , M.rows() );
+	bool addDCTerm = (M.rows()==res*res*res && !_constrainValues && _boundaryType!=-1);
 	double bNorm , inRNorm , outRNorm;
 	if( showResidual || bNorm2 ) bNorm = B.Norm( 2 );
 	if( showResidual || inRNorm2 ) inRNorm = ( addDCTerm ? ( B - M * X - X.Average() ) : ( B - M * X ) ).Norm( 2 );

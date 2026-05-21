@@ -7,13 +7,13 @@ namespace {
 
 void test_sparse_matrix_constructor() {
     SparseMatrix<double> m(3);
-    assert(m.rows == 3);
+    assert(m.rows() == 3);
 }
 
 void test_sparse_matrix_resize() {
     SparseMatrix<double> m;
     m.Resize(3);
-    assert(m.rows == 3);
+    assert(m.rows() == 3);
 }
 
 void test_matrix_entry_constructor() {
@@ -33,21 +33,21 @@ void test_matrix_entry_constructor() {
 void test_sparse_matrix_constructor_different_sizes() {
     SparseMatrix<double> m1(3);
     SparseMatrix<double> m2(5);
-    assert(m1.rows == 3);
-    assert(m2.rows == 5);
+    assert(m1.rows() == 3);
+    assert(m2.rows() == 5);
 }
 
 void test_sparse_matrix_row_count() {
     SparseMatrix<double> m(5);
-    assert(m.rowSizes[0] == 0);
-    assert(m.rowSizes[1] == 0);
-    assert(m.rowSizes[4] == 0);
+    assert(m.rowSize(0) == 0);
+    assert(m.rowSize(1) == 0);
+    assert(m.rowSize(4) == 0);
 }
 
 void test_sparse_matrix_copy() {
     SparseMatrix<double> m1(3);
     SparseMatrix<double> m2(m1);
-    assert(m2.rows == 3);
+    assert(m2.rows() == 3);
 }
 
 }

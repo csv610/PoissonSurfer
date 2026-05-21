@@ -52,13 +52,13 @@ public:
 	size_t polyCount;
 	StartingPolynomial<Degree>* polys;
 
-	PPolynomial(void);
+	PPolynomial();
 	PPolynomial(const PPolynomial<Degree>& p);
-	~PPolynomial(void);
+	~PPolynomial();
 
 	PPolynomial& operator = (const PPolynomial& p);
 
-	int size(void) const;
+	int size() const;
 
 	void set( size_t size );
 	// Note: this method will sort the elements in sps
@@ -97,8 +97,8 @@ public:
 	PPolynomial scale( double s ) const;
 	PPolynomial shift( double t ) const;
 
-	PPolynomial< Degree-1 > derivative(void) const;
-	PPolynomial< Degree+1 > integral(void) const;
+	PPolynomial< Degree-1 > derivative() const;
+	PPolynomial< Degree+1 > integral() const;
 
 	void getSolutions(double c,std::vector<double>& roots,double EPS,double min=-DBL_MAX,double max=DBL_MAX) const;
 

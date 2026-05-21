@@ -69,3 +69,28 @@ else()
 endif()
 
 add_test(NAME AllTests COMMAND run_tests)
+
+# ---- Benchmarks ----
+add_executable(bench_recon
+    bench/bench_recon.cpp
+    Src/Factor.cpp
+    Src/Geometry.cpp
+    Src/MarchingCubes.cpp
+    Src/plyfile.cpp
+)
+target_include_directories(bench_recon PRIVATE Src)
+target_link_libraries(bench_recon PRIVATE OpenMP::OpenMP_CXX)
+target_compile_definitions(bench_recon PRIVATE POISSON_RECON_TESTING)
+
+add_custom_target(bench_cli
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bench/bench_cli.sh
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Running CLI benchmarks for surfrecon/surftrimmer/surfremesh"
+)
+
+add_custom_target(bench
+    COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target bench_recon && ${CMAKE_BINARY_DIR}/bench_recon
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/bench/bench_cli.sh
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    COMMENT "Running all benchmarks (recon + CLI)"
+)

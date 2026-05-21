@@ -55,16 +55,16 @@ void OctNode< NodeData >::SetAllocator(int blockSize)
 	else{UseAlloc=0;}
 }
 template< class NodeData >
-int OctNode< NodeData >::UseAllocator(void){return UseAlloc;}
+int OctNode< NodeData >::UseAllocator(){return UseAlloc;}
 
 template< class NodeData >
-OctNode< NodeData >::OctNode(void){
+OctNode< NodeData >::OctNode(){
 	parent=children=NULL;
 	_depthAndOffset = 0;
 }
 
 template< class NodeData >
-OctNode< NodeData >::~OctNode(void){
+OctNode< NodeData >::~OctNode(){
 	if(!UseAlloc){if(children){delete[] children;}}
 	parent=children=NULL;
 }
@@ -91,7 +91,7 @@ int OctNode< NodeData >::initChildren( void )
 	if( !children )
 	{
 		fprintf(stderr,"Failed to initialize children in OctNode::initChildren\n");
-		exit(0);
+		throw std::runtime_error("Fatal error");
 		return 0;
 	}
 	int d , off[3];
@@ -185,7 +185,7 @@ inline void OctNode< NodeData >::CenterAndWidth(const long long& index,Point3D<R
 }
 
 template< class NodeData >
-int OctNode< NodeData >::maxDepth(void) const{
+int OctNode< NodeData >::maxDepth() const{
 	if(!children){return 0;}
 	else{
 		int c,d;
@@ -231,7 +231,7 @@ size_t OctNode< NodeData >::maxDepthLeaves( int maxDepth ) const
 	}
 }
 template< class NodeData >
-const OctNode< NodeData >* OctNode< NodeData >::root(void) const{
+const OctNode< NodeData >* OctNode< NodeData >::root() const{
 	const OctNode* temp=this;
 	while(temp->parent){temp=temp->parent;}
 	return temp;
@@ -306,7 +306,7 @@ OctNode< NodeData >* OctNode< NodeData >::nextNode( OctNode* current )
 }
 
 template< class NodeData >
-void OctNode< NodeData >::printRange(void) const
+void OctNode< NodeData >::printRange() const
 {
 	Point3D< float > center;
 	float width;
@@ -1128,9 +1128,9 @@ OctNode< NodeData >* OctNode< NodeData >::cornerNeighbor(int cornerIndex,int for
 // OctNodeNeighborKey //
 ////////////////////////
 template< class NodeData >
-OctNode< NodeData >::Neighbors3::Neighbors3(void){clear();}
+OctNode< NodeData >::Neighbors3::Neighbors3(){clear();}
 template< class NodeData >
-void OctNode< NodeData >::Neighbors3::clear(void){
+void OctNode< NodeData >::Neighbors3::clear(){
 	for(int i=0;i<3;i++){for(int j=0;j<3;j++){for(int k=0;k<3;k++){neighbors[i][j][k]=NULL;}}}
 }
 template< class NodeData >
@@ -1143,7 +1143,7 @@ OctNode< NodeData >::NeighborKey3::NeighborKey3( const NeighborKey3& nKey3 )
 	for( int d=0 ; d<=_depth ; d++ ) memcpy( &neighbors[d] , &nKey3.neighbors[d] , sizeof(Neighbors3) );
 }
 template< class NodeData >
-OctNode< NodeData >::NeighborKey3::~NeighborKey3(void)
+OctNode< NodeData >::NeighborKey3::~NeighborKey3()
 {
 	if( neighbors ) delete[] neighbors;
 	neighbors = NULL;
@@ -1386,7 +1386,7 @@ typename OctNode< NodeData >::Neighbors3& OctNode< NodeData >::NeighborKey3::get
 			if( !temp.neighbors[1][1][1] || !temp.neighbors[1][1][1]->children )
 			{
 				fprintf( stderr , "[ERROR] Couldn't find node at appropriate depth\n" );
-				exit( 0 );
+				throw std::runtime_error("Fatal error");
 			}
 			for( i=0 ; i<2 ; i++ ) for( j=0 ; j<2 ; j++ ) for( k=0 ; k<2 ; k++ )
 				neighbors[d].neighbors[x2+i][y2+j][z2+k] = &temp.neighbors[1][1][1]->children[Cube::CornerIndex(i,j,k)];
@@ -1909,9 +1909,9 @@ void OctNode< NodeData >::ConstNeighborKey3::getNeighbors( const OctNode< NodeDa
 // ConstNeighborKey3 //
 ///////////////////////
 template< class NodeData >
-OctNode< NodeData >::ConstNeighbors3::ConstNeighbors3(void){clear();}
+OctNode< NodeData >::ConstNeighbors3::ConstNeighbors3(){clear();}
 template< class NodeData >
-void OctNode< NodeData >::ConstNeighbors3::clear(void){
+void OctNode< NodeData >::ConstNeighbors3::clear(){
 	for(int i=0;i<3;i++){for(int j=0;j<3;j++){for(int k=0;k<3;k++){neighbors[i][j][k]=NULL;}}}
 }
 template< class NodeData >
@@ -1924,7 +1924,7 @@ OctNode< NodeData >::ConstNeighborKey3::ConstNeighborKey3( const ConstNeighborKe
 	for( int d=0 ; d<=_depth ; d++ ) memcpy( &neighbors[d] , &key3.neighbors[d] , sizeof(ConstNeighbors3) );
 }
 template< class NodeData >
-OctNode< NodeData >::ConstNeighborKey3::~ConstNeighborKey3(void){
+OctNode< NodeData >::ConstNeighborKey3::~ConstNeighborKey3(){
 	if( neighbors ) delete[] neighbors;
 	neighbors=NULL;
 }
@@ -1992,7 +1992,7 @@ template< class NodeData >
 typename OctNode< NodeData >::ConstNeighbors3& OctNode< NodeData >::ConstNeighborKey3::getNeighbors( const OctNode< NodeData >* node , int minDepth )
 {
 	int d=node->depth();
-	if( d<minDepth ) fprintf( stderr , "[ERROR] Node depth lower than min-depth: %d < %d\n" , d , minDepth ) , exit( 0 );
+	if( d<minDepth ) fprintf( stderr , "[ERROR] Node depth lower than min-depth: %d < %d\n" , d , minDepth ) , throw std::runtime_error("Fatal error");
 	if( node!=neighbors[d].neighbors[1][1][1] )
 	{
 		neighbors[d].clear();

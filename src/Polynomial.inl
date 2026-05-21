@@ -35,7 +35,7 @@ DAMAGE.
 // Polynomial //
 ////////////////
 template<int Degree>
-Polynomial<Degree>::Polynomial(void){memset(coefficients,0,sizeof(double)*(Degree+1));}
+Polynomial<Degree>::Polynomial(){memset(coefficients,0,sizeof(double)*(Degree+1));}
 template<int Degree>
 template<int Degree2>
 Polynomial<Degree>::Polynomial(const Polynomial<Degree2>& P){
@@ -54,14 +54,14 @@ Polynomial<Degree>& Polynomial<Degree>::operator  = (const Polynomial<Degree2> &
 }
 
 template<int Degree>
-Polynomial<Degree-1> Polynomial<Degree>::derivative(void) const{
+Polynomial<Degree-1> Polynomial<Degree>::derivative() const{
 	Polynomial<Degree-1> p;
 	for(int i=0;i<Degree;i++){p.coefficients[i]=coefficients[i+1]*(i+1);}
 	return p;
 }
 
 template<int Degree>
-Polynomial<Degree+1> Polynomial<Degree>::integral(void) const{
+Polynomial<Degree+1> Polynomial<Degree>::integral() const{
 	Polynomial<Degree+1> p;
 	p.coefficients[0]=0;
 	for(int i=0;i<=Degree;i++){p.coefficients[i+1]=coefficients[i]/(i+1);}
@@ -101,12 +101,12 @@ int Polynomial<Degree>::operator != (const Polynomial& p) const{
 	return 1;
 }
 template<int Degree>
-int Polynomial<Degree>::isZero(void) const{
+int Polynomial<Degree>::isZero() const{
 	for(int i=0;i<=Degree;i++){if(coefficients[i]!=0){return 0;}}
 	return 1;
 }
 template<int Degree>
-void Polynomial<Degree>::setZero(void){memset(coefficients,0,sizeof(double)*(Degree+1));}
+void Polynomial<Degree>::setZero(){memset(coefficients,0,sizeof(double)*(Degree+1));}
 
 template<int Degree>
 Polynomial<Degree>& Polynomial<Degree>::addScaled(const Polynomial& p,double s){
@@ -163,7 +163,7 @@ void Polynomial<Degree>::Negate(const Polynomial& in,Polynomial& out){
 }
 
 template<int Degree>
-Polynomial<Degree> Polynomial<Degree>::operator - (void) const{
+Polynomial<Degree> Polynomial<Degree>::operator - () const{
 	Polynomial q=*this;
 	for(int i=0;i<=Degree;i++){q.coefficients[i]=-q.coefficients[i];}
 	return q;
@@ -254,7 +254,7 @@ Polynomial<Degree> Polynomial<Degree>::shift( double t ) const
 	return q;
 }
 template<int Degree>
-void Polynomial<Degree>::printnl(void) const{
+void Polynomial<Degree>::printnl() const{
 	for(int j=0;j<=Degree;j++){
 		printf("%6.4f x^%d ",coefficients[j],j);
 		if(j<Degree && coefficients[j+1]>=0){printf("+");}
@@ -294,12 +294,12 @@ int Polynomial<Degree>::getSolutions( double c , double* roots , double EPS ) co
 {
 	double _roots[4][2];
 	int _rCount=0;
+	const double* coeffs = coefficients;
 	switch( Degree )
 	{
-		case 1: _rCount = Factor(                                                       coefficients[1] , coefficients[0]-c , _roots , EPS ) ; break;
-		case 2:	_rCount = Factor(                                     coefficients[2] , coefficients[1] , coefficients[0]-c , _roots , EPS ) ; break;
-		case 3: _rCount = Factor(                   coefficients[3] , coefficients[2] , coefficients[1] , coefficients[0]-c , _roots , EPS ) ; break;
-//		case 4: _rCount = Factor( coefficients[4] , coefficients[3] , coefficients[2] , coefficients[1] , coefficients[0]-c , _roots , EPS ) ; break;
+		case 1: _rCount = Factor(                         coeffs[1] , coeffs[0]-c , _roots , EPS ) ; break;
+		case 2:	_rCount = Factor(                       coeffs[2] , coeffs[1] , coeffs[0]-c , _roots , EPS ) ; break;
+		case 3: _rCount = Factor(     coeffs[3] , coeffs[2] , coeffs[1] , coeffs[0]-c , _roots , EPS ) ; break;
 		default: printf( "Can't solve polynomial of degree: %d\n" , Degree );
 	}
 	int rCount = 0;

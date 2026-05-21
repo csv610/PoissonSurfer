@@ -88,8 +88,8 @@ public:
 	OctNode* children;
 	NodeData nodeData;
 
-	OctNode(void);
-	~OctNode(void);
+	OctNode();
+	~OctNode();
 	int initChildren( void );
 
 	void depthAndOffset( int& depth , int offset[DIMENSION] ) const; 
@@ -121,8 +121,8 @@ public:
 
 	void setFullDepth(int maxDepth);
 
-	void printLeaves(void) const;
-	void printRange(void) const;
+	void printLeaves() const;
+	void printRange() const;
 
 	template<class NodeAdjacencyFunction>
 	void processNodeFaces(OctNode* node,NodeAdjacencyFunction* F,int fIndex,int processCurrent=1);

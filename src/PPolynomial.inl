@@ -73,7 +73,7 @@ int StartingPolynomial<Degree>::Compare(const void* v1,const void* v2){
 // PPolynomial //
 /////////////////
 template<int Degree>
-PPolynomial<Degree>::PPolynomial(void){
+PPolynomial<Degree>::PPolynomial(){
 	polyCount=0;
 	polys=NULL;
 }
@@ -86,7 +86,7 @@ PPolynomial<Degree>::PPolynomial(const PPolynomial<Degree>& p){
 }
 
 template<int Degree>
-PPolynomial<Degree>::~PPolynomial(void){
+PPolynomial<Degree>::~PPolynomial(){
 	if(polyCount){free(polys);}
 	polyCount=0;
 	polys=NULL;
@@ -104,7 +104,7 @@ void PPolynomial<Degree>::set(StartingPolynomial<Degree>* sps,int count){
 	reset( c );
 }
 template <int Degree>
-int PPolynomial<Degree>::size(void) const{return int(sizeof(StartingPolynomial<Degree>)*polyCount);}
+int PPolynomial<Degree>::size() const{return int(sizeof(StartingPolynomial<Degree>)*polyCount);}
 
 template<int Degree>
 void PPolynomial<Degree>::set( size_t size )
@@ -171,7 +171,7 @@ double PPolynomial<Degree>::integral( double tMin , double tMax ) const
 	return v*m;
 }
 template<int Degree>
-double PPolynomial<Degree>::Integral(void) const{return integral(polys[0].start,polys[polyCount-1].start);}
+double PPolynomial<Degree>::Integral() const{return integral(polys[0].start,polys[polyCount-1].start);}
 template<int Degree>
 PPolynomial<Degree> PPolynomial<Degree>::operator + (const PPolynomial<Degree>& p) const{
 	PPolynomial q;
@@ -273,7 +273,7 @@ PPolynomial<Degree> PPolynomial<Degree>::shift( double s ) const
 	return q;
 }
 template<int Degree>
-PPolynomial<Degree-1> PPolynomial<Degree>::derivative(void) const{
+PPolynomial<Degree-1> PPolynomial<Degree>::derivative() const{
 	PPolynomial<Degree-1> q;
 	q.set(polyCount);
 	for(size_t i=0;i<polyCount;i++){
@@ -283,7 +283,7 @@ PPolynomial<Degree-1> PPolynomial<Degree>::derivative(void) const{
 	return q;
 }
 template<int Degree>
-PPolynomial<Degree+1> PPolynomial<Degree>::integral(void) const{
+PPolynomial<Degree+1> PPolynomial<Degree>::integral() const{
 	int i;
 	PPolynomial<Degree+1> q;
 	q.set(polyCount);
@@ -340,7 +340,7 @@ PPolynomial<Degree> PPolynomial<Degree>::operator / ( double s ) const
 }
 
 template<int Degree>
-void PPolynomial<Degree>::printnl(void) const{
+void PPolynomial<Degree>::printnl() const{
 	Polynomial<Degree> p;
 
 	if(!polyCount){

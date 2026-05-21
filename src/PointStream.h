@@ -46,7 +46,7 @@ class MemoryPointStream : public PointStream< Real >
 	size_t _pointCount;
 	size_t _current;
 public:
-	MemoryPointStream( size_t pointCount , std::pair< Point3D< Real > , Point3D< Real > >* points );
+	MemoryPointStream( size_t pointCount , const std::pair< Point3D< Real > , Point3D< Real > >* points );
 	~MemoryPointStream( void );
 	void reset( void );
 	bool nextPoint( Point3D< Real >& p , Point3D< Real >& n );

@@ -28,6 +28,7 @@ DAMAGE.
 #include "Geometry.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdexcept>
 #ifdef _WIN32
 #include <io.h>
 #endif // _WIN32
@@ -36,8 +37,8 @@ DAMAGE.
 // CoredMeshData //
 ///////////////////
 
-TriangulationEdge::TriangulationEdge(void){pIndex[0]=pIndex[1]=tIndex[0]=tIndex[1]=-1;}
-TriangulationTriangle::TriangulationTriangle(void){eIndex[0]=eIndex[1]=eIndex[2]=-1;}
+TriangulationEdge::TriangulationEdge(){pIndex[0]=pIndex[1]=tIndex[0]=tIndex[1]=-1;}
+TriangulationTriangle::TriangulationTriangle(){eIndex[0]=eIndex[1]=eIndex[2]=-1;}
 
 ///////////////////////////
 // BufferedReadWriteFile //
@@ -58,16 +59,17 @@ BufferedReadWriteFile::BufferedReadWriteFile( char* fileName , int bufferSize )
 #endif // _WIN32
 		tempFile = true;
 	}
-	if( !_fp ) fprintf( stderr , "[ERROR] Failed to open file: %s\n" , _fileName ) , exit( 0 );
-	_buffer = (char*) malloc( _bufferSize );
+	if( !_fp ) throw std::runtime_error( std::string("[ERROR] Failed to open file: ") + _fileName );
+	_buffer = static_cast<char*>( malloc( _bufferSize ) );
+	if( !_buffer ) throw std::runtime_error( std::string("[ERROR] Failed to allocate buffer of size: ") + std::to_string(_bufferSize) );
 }
-BufferedReadWriteFile::~BufferedReadWriteFile( void )
+BufferedReadWriteFile::~BufferedReadWriteFile()
 {
 	free( _buffer );
 	fclose( _fp );
 	if( tempFile ) remove( _fileName );
 }
-void BufferedReadWriteFile::reset( void )
+void BufferedReadWriteFile::reset()
 {
 	if( _bufferIndex ) fwrite( _buffer , 1 , _bufferIndex , _fp );
 	_bufferIndex = 0;
@@ -78,7 +80,7 @@ void BufferedReadWriteFile::reset( void )
 bool BufferedReadWriteFile::write( const void* data , size_t size )
 {
 	if( !size ) return true;
-	char* _data = (char*) data;
+	const char* _data = static_cast<const char*>(data);
 	size_t sz = _bufferSize - _bufferIndex;
 	while( sz<=size )
 	{
@@ -99,7 +101,7 @@ bool BufferedReadWriteFile::write( const void* data , size_t size )
 bool BufferedReadWriteFile::read( void* data , size_t size )
 {
 	if( !size ) return true;
-	char *_data = (char*) data;
+	char *_data = static_cast<char*>(data);
 	size_t sz = _bufferSize - _bufferIndex;
 	while( sz<=size )
 	{

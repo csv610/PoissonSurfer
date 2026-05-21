@@ -29,6 +29,9 @@ DAMAGE.
 #ifndef MULTI_GRID_OCTREE_DATA_INCLUDED
 #define MULTI_GRID_OCTREE_DATA_INCLUDED
 
+void DumpOutput( const char* format , ... );
+void DumpOutput2( char* str , const char* format , ... );
+
 #define NEW_CODE 1
 
 //#define MAX_MEMORY_GB 15

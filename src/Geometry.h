@@ -36,18 +36,18 @@ DAMAGE.
 #include "Hash.h"
 
 template<class Real>
-Real Random(void);
+Real Random();
 
 template< class Real >
 struct Point3D
 {
 	Real coords[3];
-	Point3D( void ) { coords[0] = coords[1] = coords[2] = Real(0); }
+	Point3D() { coords[0] = coords[1] = coords[2] = Real(0); }
 	template< class _Real > Point3D( _Real v0 , _Real v1 , _Real v2 ){ coords[0] = Real(v0) , coords[1] = Real(v1) , coords[2] = Real(v2); }
 	template< class _Real > Point3D( const Point3D< _Real >& p ){ coords[0] = Real( p[0] ) , coords[1] = Real( p[1] ) , coords[2] = Real( p[2] ); }
 	inline       Real& operator[] ( int i )       { return coords[i]; }
 	inline const Real& operator[] ( int i ) const { return coords[i]; }
-	inline Point3D  operator - ( void ) const { Point3D q ; q.coords[0] = -coords[0] , q.coords[1] = -coords[1] , q.coords[2] = -coords[2] ; return q; }
+	inline Point3D  operator - () const { Point3D q ; q.coords[0] = -coords[0] , q.coords[1] = -coords[1] , q.coords[2] = -coords[2] ; return q; }
 
 	template< class _Real > inline Point3D& operator += ( Point3D< _Real > p ){ coords[0] += Real(p.coords[0]) , coords[1] += Real(p.coords[1]) , coords[2] += Real(p.coords[2]) ; return *this; }
 	template< class _Real > inline Point3D  operator +  ( Point3D< _Real > p ) const { Point3D q ; q.coords[0] = coords[0] + Real(p.coords[0]) , q.coords[1] = coords[1] + Real(p.coords[1]) , q.coords[2] = coords[2] + Real(p.coords[2]) ; return q; }
@@ -68,8 +68,8 @@ template< class Real >
 struct XForm3x3
 {
 	Real coords[3][3];
-	XForm3x3( void ) { for( int i=0 ; i<3 ; i++ ) for( int j=0 ; j<3 ; j++ )  coords[i][j] = Real(0.); }
-	static XForm3x3 Identity( void )
+	XForm3x3() { for( int i=0 ; i<3 ; i++ ) for( int j=0 ; j<3 ; j++ )  coords[i][j] = Real(0.); }
+	static XForm3x3 Identity()
 	{
 		XForm3x3 xForm;
 		xForm(0,0) = xForm(1,1) = xForm(2,2) = Real(1.);
@@ -89,7 +89,7 @@ struct XForm3x3
 		for( int i=0 ; i<3 ; i++ ) for( int j=0 ; j<3 ; j++ ) for( int k=0 ; k<3 ; k++ ) n.coords[i][j] += m.coords[i][k]*coords[k][j];
 		return n;
 	}
-	XForm3x3 transpose( void ) const
+	XForm3x3 transpose() const
 	{
 		XForm3x3 xForm;
 		for( int i=0 ; i<3 ; i++ ) for( int j=0 ; j<3 ; j++ ) xForm( i , j ) = coords[j][i];
@@ -101,8 +101,8 @@ struct XForm3x3
 		int j1 = (j+1)%3 , j2 = (j+2)%3;
 		return coords[i1][j1] * coords[i2][j2] - coords[i1][j2] * coords[i2][j1];
 	}
-	Real determinant( void ) const { return coords[0][0] * subDeterminant( 0 , 0 ) + coords[1][0] * subDeterminant( 1 , 0 ) + coords[2][0] * subDeterminant( 2 , 0 ); }
-	XForm3x3 inverse( void ) const
+	Real determinant() const { return coords[0][0] * subDeterminant( 0 , 0 ) + coords[1][0] * subDeterminant( 1 , 0 ) + coords[2][0] * subDeterminant( 2 , 0 ); }
+	XForm3x3 inverse() const
 	{
 		XForm3x3 xForm;
 		Real d = determinant();
@@ -115,8 +115,8 @@ template< class Real >
 struct XForm4x4
 {
 	Real coords[4][4];
-	XForm4x4( void ) { for( int i=0 ; i<4 ; i++ ) for( int j=0 ; j<4 ; j++ )  coords[i][j] = Real(0.); }
-	static XForm4x4 Identity( void )
+	XForm4x4() { for( int i=0 ; i<4 ; i++ ) for( int j=0 ; j<4 ; j++ )  coords[i][j] = Real(0.); }
+	static XForm4x4 Identity()
 	{
 		XForm4x4 xForm;
 		xForm(0,0) = xForm(1,1) = xForm(2,2) = xForm(3,3) = Real(1.);
@@ -129,8 +129,8 @@ struct XForm4x4
 		Point3D< _Real > q;
 		for( int i=0 ; i<3 ; i++ )
 		{
-			for( int j=0 ; j<3 ; j++ ) q[i] += (_Real)( coords[j][i] * p[j] );
-			q[i] += (_Real)coords[3][i];
+			for( int j=0 ; j<3 ; j++ ) q[i] += static_cast<_Real>( coords[j][i] * p[j] );
+			q[i] += static_cast<_Real>(coords[3][i]);
 		}
 		return q;
 	}
@@ -140,7 +140,7 @@ struct XForm4x4
 		for( int i=0 ; i<4 ; i++ ) for( int j=0 ; j<4 ; j++ ) for( int k=0 ; k<4 ; k++ ) n.coords[i][j] += m.coords[i][k]*coords[k][j];
 		return n;
 	}
-	XForm4x4 transpose( void ) const
+	XForm4x4 transpose() const
 	{
 		XForm4x4 xForm;
 		for( int i=0 ; i<4 ; i++ ) for( int j=0 ; j<4 ; j++ ) xForm( i , j ) = coords[j][i];
@@ -153,8 +153,8 @@ struct XForm4x4
 		for( int _i=0 ; _i<3 ; _i++ ) for( int _j=0 ; _j<3 ; _j++ ) xForm( _i , _j ) = coords[ ii[_i] ][ jj[_j] ];
 		return xForm.determinant();
 	}
-	Real determinant( void ) const { return coords[0][0] * subDeterminant( 0 , 0 ) - coords[1][0] * subDeterminant( 1 , 0 ) + coords[2][0] * subDeterminant( 2 , 0 ) - coords[3][0] * subDeterminant( 3 , 0 ); }
-	XForm4x4 inverse( void ) const
+	Real determinant() const { return coords[0][0] * subDeterminant( 0 , 0 ) - coords[1][0] * subDeterminant( 1 , 0 ) + coords[2][0] * subDeterminant( 2 , 0 ) - coords[3][0] * subDeterminant( 3 , 0 ); }
+	XForm4x4 inverse() const
 	{
 		XForm4x4 xForm;
 		Real d = determinant();
@@ -167,10 +167,10 @@ struct XForm4x4
 
 
 template<class Real>
-Point3D<Real> RandomBallPoint(void);
+Point3D<Real> RandomBallPoint();
 
 template<class Real>
-Point3D<Real> RandomSpherePoint(void);
+Point3D<Real> RandomSpherePoint();
 
 template<class Real>
 double Length(const Point3D<Real>& p);
@@ -191,7 +191,7 @@ void CrossProduct(const Point3D<Real>& p1,const Point3D<Real>& p2,Point3D<Real>&
 class Edge{
 public:
 	double p[2][2];
-	double Length(void) const{
+	double Length() const{
 		double d[2];
 		d[0]=p[0][0]-p[1][0];
 		d[1]=p[0][1]-p[1][1];
@@ -202,7 +202,7 @@ public:
 class Triangle{
 public:
 	double p[3][3];
-	double Area(void) const{
+	double Area() const{
 		double v1[3] , v2[3] , v[3];
 		for( int d=0 ; d<3 ; d++ )
 		{
@@ -214,13 +214,11 @@ public:
 		v[2] =  v1[0]*v2[1] - v1[1]*v2[0];
 		return sqrt( v[0]*v[0] + v[1]*v[1] + v[2]*v[2] ) / 2;
 	}
-	double AspectRatio(void) const{
+	double AspectRatio() const{
 		double d=0;
 		int i,j;
-		for(i=0;i<3;i++){
-	  for(i=0;i<3;i++)
+		for(i=0;i<3;i++)
 			for(j=0;j<3;j++){d+=(p[(i+1)%3][j]-p[i][j])*(p[(i+1)%3][j]-p[i][j]);}
-		}
 		return Area()/d;
 	}
 	
@@ -251,7 +249,7 @@ public:
 class TriangulationEdge
 {
 public:
-	TriangulationEdge(void);
+	TriangulationEdge();
 	int pIndex[2];
 	int tIndex[2];
 };
@@ -259,7 +257,7 @@ public:
 class TriangulationTriangle
 {
 public:
-	TriangulationTriangle(void);
+	TriangulationTriangle();
 	int eIndex[3];
 };
 
@@ -273,7 +271,7 @@ public:
 	std::vector<TriangulationTriangle>			triangles;
 
 	int factor( int tIndex,int& p1,int& p2,int& p3);
-	double area(void);
+	double area();
 	double area( int tIndex );
 	double area( int p1 , int p2 , int p3 );
 	int flipMinimize( int eIndex);
@@ -301,7 +299,7 @@ class CoredMeshData
 {
 public:
 	std::vector< Vertex > inCorePoints;
-	virtual void resetIterator( void ) = 0;
+	virtual void resetIterator() = 0;
 
 	virtual int addOutOfCorePoint( const Vertex& p ) = 0;
 	virtual int addPolygon( const std::vector< CoredVertexIndex >& vertices ) = 0;
@@ -313,8 +311,8 @@ public:
 	virtual int nextOutOfCorePoint( Vertex& p )=0;
 	virtual int nextPolygon( std::vector< CoredVertexIndex >& vertices ) = 0;
 
-	virtual int outOfCorePointCount(void)=0;
-	virtual int polygonCount( void ) = 0;
+	virtual int outOfCorePointCount()=0;
+	virtual int polygonCount() = 0;
 };
 
 template< class Vertex >
@@ -325,9 +323,9 @@ class CoredVectorMeshData : public CoredMeshData< Vertex >
 	int polygonIndex;
 	int oocPointIndex;
 public:
-	CoredVectorMeshData(void);
+	CoredVectorMeshData();
 
-	void resetIterator(void);
+	void resetIterator();
 
 	int addOutOfCorePoint( const Vertex& p );
 	int addPolygon( const std::vector< CoredVertexIndex >& vertices );
@@ -339,8 +337,8 @@ public:
 	int nextOutOfCorePoint( Vertex& p );
 	int nextPolygon( std::vector< CoredVertexIndex >& vertices );
 
-	int outOfCorePointCount(void);
-	int polygonCount( void );
+	int outOfCorePointCount();
+	int polygonCount();
 };
 class BufferedReadWriteFile
 {
@@ -350,10 +348,10 @@ class BufferedReadWriteFile
 	size_t _bufferIndex , _bufferSize;
 public:
 	BufferedReadWriteFile( char* fileName=NULL , int bufferSize=(1<<20) );
-	~BufferedReadWriteFile( void );
+	~BufferedReadWriteFile();
 	bool write( const void* data , size_t size );
 	bool read ( void* data , size_t size );
-	void reset( void );
+	void reset();
 };
 template< class Vertex >
 class CoredFileMeshData : public CoredMeshData< Vertex >
@@ -362,10 +360,10 @@ class CoredFileMeshData : public CoredMeshData< Vertex >
 	BufferedReadWriteFile *oocPointFile , *polygonFile;
 	int oocPoints , polygons;
 public:
-	CoredFileMeshData( void );
-	~CoredFileMeshData( void );
+	CoredFileMeshData();
+	~CoredFileMeshData();
 
-	void resetIterator( void );
+	void resetIterator();
 
 	int addOutOfCorePoint( const Vertex& p );
 	int addPolygon( const std::vector< CoredVertexIndex >& vertices );
@@ -377,8 +375,8 @@ public:
 	int nextOutOfCorePoint( Vertex& p );
 	int nextPolygon( std::vector< CoredVertexIndex >& vertices );
 
-	int outOfCorePointCount( void );
-	int polygonCount( void );
+	int outOfCorePointCount();
+	int polygonCount();
 };
 #include "Geometry.inl"
 

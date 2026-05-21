@@ -29,10 +29,10 @@ DAMAGE.
 #include <stdio.h>
 
 template<class Real>
-Real Random(void){return Real(rand())/RAND_MAX;}
+Real Random(){return Real(rand())/RAND_MAX;}
 
 template<class Real>
-Point3D<Real> RandomBallPoint(void){
+Point3D<Real> RandomBallPoint(){
 	Point3D<Real> p;
 	while(1){
 		p.coords[0]=Real(1.0-2.0*Random<Real>());
@@ -43,7 +43,7 @@ Point3D<Real> RandomBallPoint(void){
 	}
 }
 template<class Real>
-Point3D<Real> RandomSpherePoint(void){
+Point3D<Real> RandomSpherePoint(){
 	Point3D<Real> p=RandomBallPoint<Real>();
 	Real l=Real(Length(p));
 	p.coords[0]/=l;
@@ -317,7 +317,7 @@ double Triangulation<Real>::area(int tIndex){
 	return area(p1,p2,p3);
 }
 template<class Real>
-double Triangulation<Real>::area(void){
+double Triangulation<Real>::area(){
 	double a=0;
 	for(int i=0;i<int(triangles.size());i++){a+=area(i);}
 	return a;
@@ -426,9 +426,9 @@ int Triangulation<Real>::flipMinimize(int eIndex){
 // CoredVectorMeshData //
 /////////////////////////
 template< class Vertex >
-CoredVectorMeshData< Vertex >::CoredVectorMeshData( void ) { oocPointIndex = polygonIndex = 0; }
+CoredVectorMeshData< Vertex >::CoredVectorMeshData() { oocPointIndex = polygonIndex = 0; }
 template< class Vertex >
-void CoredVectorMeshData< Vertex >::resetIterator ( void ) { oocPointIndex = polygonIndex = 0; }
+void CoredVectorMeshData< Vertex >::resetIterator () { oocPointIndex = polygonIndex = 0; }
 template< class Vertex >
 int CoredVectorMeshData< Vertex >::addOutOfCorePoint( const Vertex& p )
 {
@@ -506,15 +506,15 @@ int CoredVectorMeshData< Vertex >::nextPolygon( std::vector< CoredVertexIndex >&
 	else return 0;
 }
 template< class Vertex >
-int CoredVectorMeshData< Vertex >::outOfCorePointCount(void){return int(oocPoints.size());}
+int CoredVectorMeshData< Vertex >::outOfCorePointCount(){return int(oocPoints.size());}
 template< class Vertex >
-int CoredVectorMeshData< Vertex >::polygonCount( void ) { return int( polygons.size() ); }
+int CoredVectorMeshData< Vertex >::polygonCount() { return int( polygons.size() ); }
 
 ///////////////////////
 // CoredFileMeshData //
 ///////////////////////
 template< class Vertex >
-CoredFileMeshData< Vertex >::CoredFileMeshData( void )
+CoredFileMeshData< Vertex >::CoredFileMeshData()
 {
 	oocPoints = polygons = 0;
 	
@@ -522,13 +522,13 @@ CoredFileMeshData< Vertex >::CoredFileMeshData( void )
 	polygonFile = new BufferedReadWriteFile();
 }
 template< class Vertex >
-CoredFileMeshData< Vertex >::~CoredFileMeshData( void )
+CoredFileMeshData< Vertex >::~CoredFileMeshData()
 {
 	delete oocPointFile;
 	delete polygonFile;
 }
 template< class Vertex >
-void CoredFileMeshData< Vertex >::resetIterator ( void )
+void CoredFileMeshData< Vertex >::resetIterator ()
 {
 	oocPointFile->reset();
 	polygonFile->reset();
@@ -618,6 +618,6 @@ int CoredFileMeshData< Vertex >::nextPolygon( std::vector< CoredVertexIndex >& v
 	else return 0;
 }
 template< class Vertex >
-int CoredFileMeshData< Vertex >::outOfCorePointCount( void ){ return oocPoints; }
+int CoredFileMeshData< Vertex >::outOfCorePointCount(){ return oocPoints; }
 template< class Vertex >
-int CoredFileMeshData< Vertex >::polygonCount( void ) { return polygons; }
+int CoredFileMeshData< Vertex >::polygonCount() { return polygons; }

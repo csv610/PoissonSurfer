@@ -254,21 +254,10 @@ void ShowUsage(char* ex)
 	printf( "\t[--%s]\n" , Verbose.name );
 	printf( "\t\t If this flag is enabled, the progress of the reconstructor will be output to STDOUT.\n" );
 }
-template< class Real , class Vertex >
-int Execute( int argc , char* argv[] )
+template< class Real >
+static XForm4x4< Real > loadXForm()
 {
-	Reset< Real >();
-	int i;
-	int paramNum = sizeof(params)/sizeof(cmdLineReadable*);
-	int commentNum=0;
-	char **comments;
-
-	comments = new char*[paramNum+7];
-	for( i=0 ; i<paramNum+7 ; i++ ) comments[i] = new char[1024];
-
-	if( Verbose.set ) echoStdout=1;
-
-	XForm4x4< Real > xForm , iXForm;
+	XForm4x4< Real > xForm;
 	if( XForm.set )
 	{
 		FILE* fp = fopen( XForm.value , "r" );
@@ -279,18 +268,26 @@ int Execute( int argc , char* argv[] )
 		}
 		else
 		{
+			int count = 0;
 			for( int i=0 ; i<4 ; i++ ) for( int j=0 ; j<4 ; j++ )
 			{
 				float f;
-				fscanf( fp , " %f " , &f );
-				xForm(i,j) = (Real)f;
+				if( fscanf( fp , " %f " , &f )==1 ){ xForm(i,j) = static_cast<Real>(f); count++; }
+			}
+			if( count!=16 )
+			{
+				fprintf( stderr , "[WARNING] Could not read x-form from: %s (got %d values, expected 16)\n" , XForm.value , count );
+				xForm = XForm4x4< Real >::Identity();
 			}
 			fclose( fp );
 		}
 	}
 	else xForm = XForm4x4< Real >::Identity();
-	iXForm = xForm.inverse();
+	return xForm;
+}
 
+static void buildComments( char** comments , int& commentNum , int paramNum )
+{
 	DumpOutput2( comments[commentNum++] , "Running Screened Poisson Reconstruction (Version 6.13)\n" );
 	char str[1024];
 	for( int i=0 ; i<paramNum ; i++ )
@@ -300,56 +297,129 @@ int Execute( int argc , char* argv[] )
 			if( strlen( str ) ) DumpOutput2( comments[commentNum++] , "\t--%s %s\n" , params[i]->name , str );
 			else                DumpOutput2( comments[commentNum++] , "\t--%s\n" , params[i]->name );
 		}
+}
 
-	double t;
+static int validateDepth( int kernelDepth , int depth )
+{
+	if( kernelDepth>depth )
+	{
+		fprintf( stderr,"[ERROR] %s can't be greater than %s: %d <= %d\n" , KernelDepth.name , Depth.name , kernelDepth , depth );
+		return 0;
+	}
+	return 1;
+}
+
+static PointStream< float >* openPointStream( const char* path )
+{
+	char* ext = GetFileExtension( const_cast<char*>( path ) );
+	PointStream< float >* stream;
+	if     ( !strcasecmp( ext , "bnpts" ) ) stream = new BinaryPointStream< float >( path );
+	else if( !strcasecmp( ext , "ply"   ) ) stream = new    PLYPointStream< float >( path );
+	else                                    stream = new  ASCIIPointStream< float >( path );
+	delete[] ext;
+	return stream;
+}
+
+template< class Real >
+static void writeVoxelGrid( Octree< Real >& tree , Pointer( Real ) solution , Real isoValue )
+{
+	double t = Time();
+	FILE* fp = fopen( VoxelGrid.value , "wb" );
+	if( !fp ) fprintf( stderr , "Failed to open voxel file for writing: %s\n" , VoxelGrid.value );
+	else
+	{
+		int res;
+		Pointer( Real ) values = tree.Evaluate( solution , res , isoValue , VoxelDepth.value );
+		fwrite( &res , sizeof(int) , 1 , fp );
+		if( sizeof(Real)==sizeof(float) ) fwrite( values , sizeof(float) , res*res*res , fp );
+		else
+		{
+			float *fValues = new float[res*res*res];
+			for( int i=0 ; i<res*res*res ; i++ ) fValues[i] = static_cast<float>( values[i] );
+			fwrite( fValues , sizeof(float) , res*res*res , fp );
+			delete[] fValues;
+		}
+		fclose( fp );
+		DeletePointer( values );
+	}
+	DumpOutput( "Got voxel grid in: %f\n" , Time()-t );
+}
+
+template< class Real , class Vertex >
+static void writeMesh( Octree< Real >& octree , CoredFileMeshData< Vertex >& mesh , const XForm4x4< Real >& iXForm , Pointer( Real ) solution , Real isoValue , std::vector< Real >* kernelDensityWeights , double& maxMemoryUsage , char** comments , int& commentNum , double& tt )
+{
+	double t = Time();
+	octree.maxMemoryUsage = 0;
+	octree.GetMCIsoSurface( kernelDensityWeights ? GetPointer( *kernelDensityWeights ) : NullPointer< Real >() , solution , isoValue , mesh , true , !NonManifold.set , PolygonMesh.set );
+	if( PolygonMesh.set ) DumpOutput2( comments[commentNum++] , "#         Got polygons in: %9.1f (s), %9.1f (MB)\n" , Time()-t , octree.maxMemoryUsage );
+	else                  DumpOutput2( comments[commentNum++] , "#        Got triangles in: %9.1f (s), %9.1f (MB)\n" , Time()-t , octree.maxMemoryUsage );
+	maxMemoryUsage = std::max< double >( maxMemoryUsage , octree.maxMemoryUsage );
+	DumpOutput2( comments[commentNum++],"#             Total Solve: %9.1f (s), %9.1f (MB)\n" , Time()-tt , maxMemoryUsage );
+
+	if( NoComments.set )
+	{
+		if( ASCII.set ) PlyWritePolygons( Out.value , &mesh , PLY_ASCII         , NULL , 0 , iXForm );
+		else            PlyWritePolygons( Out.value , &mesh , PLY_BINARY_NATIVE , NULL , 0 , iXForm );
+	}
+	else
+	{
+		if( ASCII.set ) PlyWritePolygons( Out.value , &mesh , PLY_ASCII         , const_cast<const char**>(comments) , commentNum , iXForm );
+		else            PlyWritePolygons( Out.value , &mesh , PLY_BINARY_NATIVE , const_cast<const char**>(comments) , commentNum , iXForm );
+	}
+	DumpOutput( "Vertices / Polygons: %d / %d\n" , mesh.outOfCorePointCount()+static_cast<int>(mesh.inCorePoints.size()) , mesh.polygonCount() );
+}
+
+template< class Real , class Vertex >
+int Execute( int argc , char* argv[] )
+{
+	Reset< Real >();
+	int paramNum = sizeof(params)/sizeof(cmdLineReadable*);
+	int commentNum=0;
+	char **comments = new char*[paramNum+7];
+	for( int i=0 ; i<paramNum+7 ; i++ ) comments[i] = new char[1024];
+
+	if( Verbose.set ) echoStdout=1;
+
+	XForm4x4< Real > xForm = loadXForm< Real >();
+	XForm4x4< Real > iXForm = xForm.inverse();
+
+	buildComments( comments , commentNum , paramNum );
+
 	double tt=Time();
 	Real isoValue = 0;
 
 	Octree< Real > tree;
 	tree.threads = Threads.value;
-	if( !In.set )
-	{
-		ShowUsage(argv[0]);
-		return 0;
-	}
+	if( !In.set ){ ShowUsage(argv[0]); return 0; }
 	if( !MaxSolveDepth.set ) MaxSolveDepth.value = Depth.value;
-	
 	OctNode< TreeNodeData >::SetAllocator( MEMORY_ALLOCATOR_BLOCK_SIZE );
 
-	t=Time();
 	int kernelDepth = KernelDepth.set ?  KernelDepth.value : Depth.value-2;
-	if( kernelDepth>Depth.value )
-	{
-		fprintf( stderr,"[ERROR] %s can't be greater than %s: %d <= %d\n" , KernelDepth.name , Depth.name , KernelDepth.value , Depth.value );
-		return EXIT_FAILURE;
-	}
+	if( !validateDepth( kernelDepth , Depth.value ) ) return EXIT_FAILURE;
 
 	double maxMemoryUsage;
-	t=Time() , tree.maxMemoryUsage=0;
+	double t=Time();
+	tree.maxMemoryUsage=0;
 	typename Octree< Real >::PointInfo* pointInfo = new typename Octree< Real >::PointInfo();
 	typename Octree< Real >::NormalInfo* normalInfo = new typename Octree< Real >::NormalInfo();
 	std::vector< Real >* kernelDensityWeights = new std::vector< Real >();
 	std::vector< Real >* centerWeights = new std::vector< Real >();
-	PointStream< float >* pointStream;
-	char* ext = GetFileExtension( In.value );
-	if     ( !strcasecmp( ext , "bnpts" ) ) pointStream = new BinaryPointStream< float >( In.value );
-	else if( !strcasecmp( ext , "ply"   ) ) pointStream = new    PLYPointStream< float >( In.value );
-	else                                    pointStream = new  ASCIIPointStream< float >( In.value );
-	delete[] ext;
-	int pointCount = tree.template SetTree< float >( pointStream , MinDepth.value , Depth.value , FullDepth.value , kernelDepth , Real(SamplesPerNode.value) , Scale.value , Confidence.set , NormalWeights.set , PointWeight.value , AdaptiveExponent.value , *pointInfo , *normalInfo , *kernelDensityWeights , *centerWeights , BoundaryType.value , xForm , Complete.set );
+	PointStream< float >* pointStream = openPointStream( In.value );
+	int pointCount = tree.template SetTree< float >( pointStream , MinDepth.value , Depth.value , FullDepth.value , kernelDepth , static_cast<Real>(SamplesPerNode.value) , Scale.value , Confidence.set , NormalWeights.set , PointWeight.value , AdaptiveExponent.value , *pointInfo , *normalInfo , *kernelDensityWeights , *centerWeights , BoundaryType.value , xForm , Complete.set );
+	delete pointStream;
 	if( !Density.set ) delete kernelDensityWeights , kernelDensityWeights = NULL;
 
 	DumpOutput2( comments[commentNum++] , "#             Tree set in: %9.1f (s), %9.1f (MB)\n" , Time()-t , tree.maxMemoryUsage );
 	DumpOutput( "Input Points: %d\n" , pointCount );
 	DumpOutput( "Leaves/Nodes: %d/%d\n" , tree.tree.leaves() , tree.tree.nodes() );
-	DumpOutput( "Memory Usage: %.3f MB\n" , float( MemoryInfo::Usage() )/(1<<20) );
+	DumpOutput( "Memory Usage: %.3f MB\n" , static_cast<float>( MemoryInfo::Usage() )/(1<<20) );
 
 	maxMemoryUsage = tree.maxMemoryUsage;
 	t=Time() , tree.maxMemoryUsage=0;
 	Pointer( Real ) constraints = tree.SetLaplacianConstraints( *normalInfo );
 	delete normalInfo;
 	DumpOutput2( comments[commentNum++] , "#      Constraints set in: %9.1f (s), %9.1f (MB)\n" , Time()-t , tree.maxMemoryUsage );
-	DumpOutput( "Memory Usage: %.3f MB\n" , float( MemoryInfo::Usage())/(1<<20) );
+	DumpOutput( "Memory Usage: %.3f MB\n" , static_cast<float>( MemoryInfo::Usage())/(1<<20) );
 	maxMemoryUsage = std::max< double >( maxMemoryUsage , tree.maxMemoryUsage );
 
 	t=Time() , tree.maxMemoryUsage=0;
@@ -357,7 +427,7 @@ int Execute( int argc , char* argv[] )
 	delete pointInfo;
 	FreePointer( constraints );
 	DumpOutput2( comments[commentNum++] , "# Linear system solved in: %9.1f (s), %9.1f (MB)\n" , Time()-t , tree.maxMemoryUsage );
-	DumpOutput( "Memory Usage: %.3f MB\n" , float( MemoryInfo::Usage() )/(1<<20) );
+	DumpOutput( "Memory Usage: %.3f MB\n" , static_cast<float>( MemoryInfo::Usage() )/(1<<20) );
 	maxMemoryUsage = std::max< double >( maxMemoryUsage , tree.maxMemoryUsage );
 
 	CoredFileMeshData< Vertex > mesh;
@@ -369,52 +439,12 @@ int Execute( int argc , char* argv[] )
 	DumpOutput( "Got average in: %f\n" , Time()-t );
 	DumpOutput( "Iso-Value: %e\n" , isoValue );
 
-	if( VoxelGrid.set )
-	{
-		double t = Time();
-		FILE* fp = fopen( VoxelGrid.value , "wb" );
-		if( !fp ) fprintf( stderr , "Failed to open voxel file for writing: %s\n" , VoxelGrid.value );
-		else
-		{
-			int res;
-			Pointer( Real ) values = tree.Evaluate( solution , res , isoValue , VoxelDepth.value );
-			fwrite( &res , sizeof(int) , 1 , fp );
-			if( sizeof(Real)==sizeof(float) ) fwrite( values , sizeof(float) , res*res*res , fp );
-			else
-			{
-				float *fValues = new float[res*res*res];
-				for( int i=0 ; i<res*res*res ; i++ ) fValues[i] = float( values[i] );
-				fwrite( fValues , sizeof(float) , res*res*res , fp );
-				delete[] fValues;
-			}
-			fclose( fp );
-			DeletePointer( values );
-		}
-		DumpOutput( "Got voxel grid in: %f\n" , Time()-t );
-	}
+	if( VoxelGrid.set ) writeVoxelGrid< Real >( tree , solution , isoValue );
+	if( Out.set ) writeMesh< Real , Vertex >( tree , mesh , iXForm , solution , isoValue , kernelDensityWeights , maxMemoryUsage , comments , commentNum , tt );
 
-	if( Out.set )
-	{
-		t = Time() , tree.maxMemoryUsage = 0;
-		tree.GetMCIsoSurface( kernelDensityWeights ? GetPointer( *kernelDensityWeights ) : NullPointer< Real >() , solution , isoValue , mesh , true , !NonManifold.set , PolygonMesh.set );
-		if( PolygonMesh.set ) DumpOutput2( comments[commentNum++] , "#         Got polygons in: %9.1f (s), %9.1f (MB)\n" , Time()-t , tree.maxMemoryUsage );
-		else                  DumpOutput2( comments[commentNum++] , "#        Got triangles in: %9.1f (s), %9.1f (MB)\n" , Time()-t , tree.maxMemoryUsage );
-		maxMemoryUsage = std::max< double >( maxMemoryUsage , tree.maxMemoryUsage );
-		DumpOutput2( comments[commentNum++],"#             Total Solve: %9.1f (s), %9.1f (MB)\n" , Time()-tt , maxMemoryUsage );
-
-		if( NoComments.set )
-		{
-			if( ASCII.set ) PlyWritePolygons( Out.value , &mesh , PLY_ASCII         , NULL , 0 , iXForm );
-			else            PlyWritePolygons( Out.value , &mesh , PLY_BINARY_NATIVE , NULL , 0 , iXForm );
-		}
-		else
-		{
-			if( ASCII.set ) PlyWritePolygons( Out.value , &mesh , PLY_ASCII         , comments , commentNum , iXForm );
-			else            PlyWritePolygons( Out.value , &mesh , PLY_BINARY_NATIVE , comments , commentNum , iXForm );
-		}
-		DumpOutput( "Vertices / Polygons: %d / %d\n" , mesh.outOfCorePointCount()+mesh.inCorePoints.size() , mesh.polygonCount() );
-	}
 	FreePointer( solution );
+	for( int i=0 ; i<paramNum+7 ; i++ ) delete[] comments[i];
+	delete[] comments;
 	return 1;
 }
 
@@ -435,7 +465,7 @@ int main( int argc , char* argv[] )
 		SIZE_T peakMemory = 1;
 		peakMemory <<= 30;
 		peakMemory *= MAX_MEMORY_GB;
-		printf( "Limiting memory usage to %.2f GB\n" , float( peakMemory>>30 ) );
+		printf( "Limiting memory usage to %.2f GB\n" , static_cast<float>( peakMemory>>30 ) );
 		HANDLE h = CreateJobObject( NULL , NULL );
 		AssignProcessToJobObject( h , GetCurrentProcess() );
 

@@ -60,15 +60,15 @@ public:
 #endif // BOUNDARY_CONDITIONS
 	PPolynomial<Degree+1>* baseFunctions;
 
-	FunctionData(void);
-	~FunctionData(void);
+	FunctionData();
+	~FunctionData();
 
 	virtual void   setDotTables(const int& flags);
 	virtual void clearDotTables(const int& flags);
 
 	virtual void   setValueTables(const int& flags,const double& smooth=0);
 	virtual void   setValueTables(const int& flags,const double& valueSmooth,const double& normalSmooth);
-	virtual void clearValueTables(void);
+	virtual void clearValueTables();
 
 	/********************************************************
 	 * Sets the translates and scales of the basis function

@@ -30,7 +30,7 @@ DAMAGE.
 // FunctionData //
 //////////////////
 template<int Degree,class Real>
-FunctionData<Degree,Real>::FunctionData(void)
+FunctionData<Degree,Real>::FunctionData()
 {
 	dotTable=dDotTable=d2DotTable=NULL;
 	valueTables=dValueTables=NULL;
@@ -38,7 +38,7 @@ FunctionData<Degree,Real>::FunctionData(void)
 }
 
 template<int Degree,class Real>
-FunctionData<Degree,Real>::~FunctionData(void)
+FunctionData<Degree,Real>::~FunctionData()
 {
 	if(res)
 	{
@@ -285,7 +285,7 @@ void FunctionData<Degree,Real>::setValueTables(const int& flags,const double& va
 
 
 template<int Degree,class Real>
-void FunctionData<Degree,Real>::clearValueTables(void){
+void FunctionData<Degree,Real>::clearValueTables(){
 	if( valueTables){delete[]  valueTables;}
 	if(dValueTables){delete[] dValueTables;}
 	valueTables=dValueTables=NULL;

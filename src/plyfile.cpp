@@ -36,6 +36,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <string.h>
+#include <stdexcept>
 #include "ply.h"
 
 const char *type_names[] = {
@@ -132,7 +133,7 @@ void copy_property(PlyProperty *, PlyProperty *);
 void store_item(char *, int, int, unsigned int, double);
 
 /* return the value of a stored item */
-void get_stored_item( void *, int, int *, unsigned int *, double *);
+void get_stored_item(void *, int, int *, unsigned int *, double *);
 
 /* return the value stored in an item, given ptr to it and its type */
 double get_item_value(char *, int);
@@ -304,8 +305,9 @@ void ply_describe_element(
 	/* look for appropriate element */
 	elem = find_element (plyfile, elem_name);
 	if (elem == NULL) {
-		fprintf(stderr,"ply_describe_element: can't find element '%s'\n",elem_name);
-		exit (-1);
+		char error[1024];
+		snprintf(error, sizeof(error),"ply_describe_element: can't find element '%s'\n",elem_name);
+		throw std::runtime_error(error);
 	}
 	
 	elem->num = nelems;
@@ -451,8 +453,9 @@ void ply_element_count(
 	/* look for appropriate element */
 	elem = find_element (plyfile, elem_name);
 	if (elem == NULL) {
-		fprintf(stderr,"ply_element_count: can't find element '%s'\n",elem_name);
-		exit (-1);
+		char error[1024];
+		snprintf(error, sizeof(error),"ply_element_count: can't find element '%s'\n",elem_name);
+		throw std::runtime_error(error);
 	}
 	
 	elem->num = nelems;
@@ -487,9 +490,10 @@ void ply_header_complete(PlyFile *plyfile)
 		fprintf (fp, "format binary_little_endian 1.0\n");
 		break;
     default:
-		fprintf (stderr, "ply_header_complete: bad file type = %d\n",
+		char error[1024];
+		snprintf(error, sizeof(error), "ply_header_complete: bad file type = %d\n",
 			plyfile->file_type);
-		exit (-1);
+		throw std::runtime_error(error);
 	}
 	
 	/* write out the comments */
@@ -546,8 +550,9 @@ void ply_put_element_setup(PlyFile *plyfile, const char *elem_name)
 	
 	elem = find_element (plyfile, elem_name);
 	if (elem == NULL) {
-		fprintf(stderr, "ply_elements_setup: can't find element '%s'\n", elem_name);
-		exit (-1);
+		char error[1024];
+		snprintf(error, sizeof(error), "ply_elements_setup: can't find element '%s'\n", elem_name);
+		throw std::runtime_error(error);
 	}
 	
 	plyfile->which_elem = elem;
@@ -598,7 +603,7 @@ void ply_put_element(PlyFile *plyfile, void *elem_ptr)
 				elem_data = (char *)elem_ptr;
 			if (prop->is_list) {
 				item = elem_data + prop->count_offset;
-				get_stored_item ((void *) item, prop->count_internal,
+				get_stored_item (item, prop->count_internal,
 					&int_val, &uint_val, &double_val);
 				write_ascii_item (fp, int_val, uint_val, double_val,
 					prop->count_external);
@@ -607,7 +612,7 @@ void ply_put_element(PlyFile *plyfile, void *elem_ptr)
 				item = item_ptr[0];
 				item_size = ply_type_size[prop->internal_type];
 				for (k = 0; k < list_count; k++) {
-					get_stored_item ((void *) item, prop->internal_type,
+					get_stored_item (item, prop->internal_type,
 						&int_val, &uint_val, &double_val);
 					write_ascii_item (fp, int_val, uint_val, double_val,
 						prop->external_type);
@@ -616,7 +621,7 @@ void ply_put_element(PlyFile *plyfile, void *elem_ptr)
 			}
 			else {
 				item = elem_data + prop->offset;
-				get_stored_item ((void *) item, prop->internal_type,
+				get_stored_item (item, prop->internal_type,
 					&int_val, &uint_val, &double_val);
 				write_ascii_item (fp, int_val, uint_val, double_val,
 					prop->external_type);
@@ -639,7 +644,7 @@ void ply_put_element(PlyFile *plyfile, void *elem_ptr)
 			if (prop->is_list) {
 				item = elem_data + prop->count_offset;
 				item_size = ply_type_size[prop->count_internal];
-				get_stored_item ((void *) item, prop->count_internal,
+				get_stored_item (item, prop->count_internal,
 					&int_val, &uint_val, &double_val);
 				write_binary_item (fp, plyfile->file_type, int_val, uint_val,
 					double_val, prop->count_external);
@@ -648,7 +653,7 @@ void ply_put_element(PlyFile *plyfile, void *elem_ptr)
 				item = item_ptr[0];
 				item_size = ply_type_size[prop->internal_type];
 				for (k = 0; k < list_count; k++) {
-					get_stored_item ((void *) item, prop->internal_type,
+					get_stored_item (item, prop->internal_type,
 						&int_val, &uint_val, &double_val);
 					write_binary_item (fp, plyfile->file_type, int_val, uint_val,
 						double_val, prop->external_type);
@@ -658,7 +663,7 @@ void ply_put_element(PlyFile *plyfile, void *elem_ptr)
 			else {
 				item = elem_data + prop->offset;
 				item_size = ply_type_size[prop->internal_type];
-				get_stored_item ((void *) item, prop->internal_type,
+				get_stored_item (item, prop->internal_type,
 					&int_val, &uint_val, &double_val);
 				write_binary_item (fp, plyfile->file_type, int_val, uint_val,
 					double_val, prop->external_type);
@@ -677,44 +682,43 @@ Specify a comment that will be written in the header.
  comment - the comment to be written
  ******************************************************************************/
  
- void ply_put_comment(PlyFile *plyfile, char *comment)
+ void ply_put_comment(PlyFile *plyfile, const char *comment)
  {
-	 /* (re)allocate space for new comment */
-	 if (plyfile->num_comments == 0)
-		 plyfile->comments = (char **) myalloc (sizeof (char *));
-	 else
-		 plyfile->comments = (char **) realloc (plyfile->comments,
-		 sizeof (char *) * (plyfile->num_comments + 1));
-	 
-	 /* add comment to list */
-	 plyfile->comments[plyfile->num_comments] = _strdup (comment);
-	 plyfile->num_comments++;
+ 	/* (re)allocate space for new comment */
+ 	if (plyfile->num_comments == 0)
+ 		plyfile->comments = (char **) myalloc (sizeof (char *));
+ 	else
+ 		plyfile->comments = (char **) realloc (plyfile->comments,
+ 		sizeof (char *) * (plyfile->num_comments + 1));
+
+ 	/* add comment to list */
+ 	plyfile->comments[plyfile->num_comments] = _strdup (comment);
+ 	plyfile->num_comments++;
  }
- 
- 
+
+
  /******************************************************************************
  Specify a piece of object information (arbitrary text) that will be written
  in the header.
- 
+
   Entry:
   plyfile  - file identifier
   obj_info - the text information to be written
  ******************************************************************************/
- 
- void ply_put_obj_info(PlyFile *plyfile, char *obj_info)
+
+ void ply_put_obj_info(PlyFile *plyfile, const char *obj_info)
  {
-	 /* (re)allocate space for new info */
-	 if (plyfile->num_obj_info == 0)
-		 plyfile->obj_info = (char **) myalloc (sizeof (char *));
-	 else
-		 plyfile->obj_info = (char **) realloc (plyfile->obj_info,
-		 sizeof (char *) * (plyfile->num_obj_info + 1));
-	 
-	 /* add info to list */
-	 plyfile->obj_info[plyfile->num_obj_info] = _strdup (obj_info);
-	 plyfile->num_obj_info++;
+ 	/* (re)allocate space for new info */
+ 	if (plyfile->num_obj_info == 0)
+ 		plyfile->obj_info = (char **) myalloc (sizeof (char *));
+ 	else
+ 		plyfile->obj_info = (char **) realloc (plyfile->obj_info,
+ 		sizeof (char *) * (plyfile->num_obj_info + 1));
+
+ 	/* add info to list */
+ 	plyfile->obj_info[plyfile->num_obj_info] = _strdup (obj_info);
+ 	plyfile->num_obj_info++;
  }
- 
  
  
  
@@ -1270,9 +1274,10 @@ Open a polygon file for reading.
 	  /* look for appropriate element */
 	  elem = find_element (plyfile, elem_name);
 	  if (elem == NULL) {
-		  fprintf (stderr,
+		  char error[1024];
+		  snprintf(error, sizeof(error),
 			  "ply_get_other_element: can't find element '%s'\n", elem_name);
-		  exit (-1);
+		  throw std::runtime_error(error);
 	  }
 	  
 	  /* create room for the new "other" element, initializing the */
@@ -1311,7 +1316,7 @@ Open a polygon file for reading.
 	  for (i = 0; i < other->elem_count; i++) {
 		  /* grab and element from the file */
 		  other->other_data[i] = (OtherData *) malloc (sizeof (OtherData));
-		  ply_get_element (plyfile, (void *) other->other_data[i]);
+		  ply_get_element (plyfile, other->other_data[i]);
 	  }
 	  
 	  /* return pointer to the other elements data */
@@ -1568,8 +1573,7 @@ Open a polygon file for reading.
 	  
 	  words = get_words (plyfile->fp, &nwords, &orig_line);
 	  if (words == NULL) {
-		  fprintf (stderr, "ply_get_element: unexpected end of file\n");
-		  exit (-1);
+		  throw std::runtime_error("ply_get_element: unexpected end of file\n");
 	  }
 	  
 	  which_word = 0;
@@ -1759,8 +1763,9 @@ Read an element from a binary file.
 	  /* make sure this is a valid code */
 	  
 	  if (code <= PLY_START_TYPE || code >= PLY_END_TYPE) {
-		  fprintf (stderr, "write_scalar_type: bad data code = %d\n", code);
-		  exit (-1);
+		  char error[1024];
+		  snprintf(error, sizeof(error), "write_scalar_type: bad data code = %d\n", code);
+		  throw std::runtime_error(error);
 	  }
 	  
 	  /* write the code to a file */
@@ -1811,9 +1816,7 @@ Read an element from a binary file.
 		  native_binary_type = PLY_BINARY_BE;
 	  else
 	  {
-		  fprintf(stderr, "ply: Couldn't determine machine endianness.\n");
-		  fprintf(stderr, "ply: Exiting...\n");
-		  exit(1);
+		  throw std::runtime_error("ply: Couldn't determine machine endianness.\nply: Exiting...\n");
 	  }
   }
   
@@ -1834,9 +1837,7 @@ Read an element from a binary file.
 		  (ply_type_size[PLY_FLOAT] != sizeof(float)) ||	
 		  (ply_type_size[PLY_DOUBLE] != sizeof(double)))
 	  {
-		  fprintf(stderr, "ply: Type sizes do not match built-in types\n");
-		  fprintf(stderr, "ply: Exiting...\n");
-		  exit(1);
+		  throw std::runtime_error("ply: Type sizes do not match built-in types\nply: Exiting...\n");
 	  }
 	  
 	  types_checked = 1;
@@ -2000,8 +2001,9 @@ Read an element from a binary file.
 		  double_value = *pdouble;
 		  return (double_value);
 	  default:
-		  fprintf (stderr, "get_item_value: bad type = %d\n", type);
-		  exit (-1);
+		  char error[1024];
+		  snprintf(error, sizeof(error), "get_item_value: bad type = %d\n", type);
+		  throw std::runtime_error(error);
 	  }
   }
   
@@ -2072,8 +2074,9 @@ Read an element from a binary file.
 		  value = &double_val;
 		  break;
 	  default:
-		  fprintf (stderr, "write_binary_item: bad type = %d\n", type);
-		  exit (-1);
+		  char error[1024];
+		  snprintf(error, sizeof(error), "write_binary_item: bad type = %d\n", type);
+		  throw std::runtime_error(error);
 	  }
 
 	  
@@ -2082,8 +2085,7 @@ Read an element from a binary file.
 	  
 	  if (fwrite (value, ply_type_size[type], 1, fp) != 1)
 	  {
-		  fprintf(stderr, "PLY ERROR: fwrite() failed -- aborting.\n");
-		  exit(1);
+		  throw std::runtime_error("PLY ERROR: fwrite() failed -- aborting.\n");
 	  }
   }
   
@@ -2116,8 +2118,7 @@ Read an element from a binary file.
 	  case PLY_INT_32:
 		  if (fprintf (fp, "%d ", int_val) <= 0)
 		  {
-			  fprintf(stderr, "PLY ERROR: fprintf() failed -- aborting.\n");
-			  exit(1);
+			  throw std::runtime_error("PLY ERROR: fprintf() failed -- aborting.\n");
 		  }
 		  break;
 	  case PLY_UCHAR:
@@ -2129,8 +2130,7 @@ Read an element from a binary file.
 
 		  if (fprintf (fp, "%u ", uint_val) <= 0)
 		  {
-			  fprintf(stderr, "PLY ERROR: fprintf() failed -- aborting.\n");
-			  exit(1);
+			  throw std::runtime_error("PLY ERROR: fprintf() failed -- aborting.\n");
 		  }
 		  break;
 	  case PLY_FLOAT:
@@ -2139,13 +2139,13 @@ Read an element from a binary file.
 	  case PLY_FLOAT_64:
 	  if (fprintf (fp, "%g ", double_val) <= 0)
 		  {
-			  fprintf(stderr, "PLY ERROR: fprintf() failed -- aborting.\n");
-			  exit(1);
+			  throw std::runtime_error("PLY ERROR: fprintf() failed -- aborting.\n");
 		  }
 		  break;
 	  default:
-		  fprintf (stderr, "write_ascii_item: bad type = %d\n", type);
-		  exit (-1);
+		  char error[1024];
+		  snprintf(error, sizeof(error), "write_ascii_item: bad type = %d\n", type);
+		  throw std::runtime_error(error);
 	  }
   }
   
@@ -2226,8 +2226,9 @@ Read an element from a binary file.
 		  fprintf (fp, "%g ", double_value);
 		  return (double_value);
 	  default:
-		  fprintf (stderr, "old_write_ascii_item: bad type = %d\n", type);
-		  exit (-1);
+		  char error[1024];
+		  snprintf(error, sizeof(error), "old_write_ascii_item: bad type = %d\n", type);
+		  throw std::runtime_error(error);
 	  }
   }
   
@@ -2304,8 +2305,9 @@ Read an element from a binary file.
 		  *uint_val = (unsigned int) *double_val;
 		  break;
 	  default:
-		  fprintf (stderr, "get_stored_item: bad type = %d\n", type);
-		  exit (-1);
+		  char error[1024];
+		  snprintf(error, sizeof(error), "get_stored_item: bad type = %d\n", type);
+		  throw std::runtime_error(error);
 	  }
   }
   
@@ -2340,8 +2342,7 @@ Read an element from a binary file.
 	  
 	  if (fread (ptr, ply_type_size[type], 1, fp) != 1)
 	  {
-		  fprintf(stderr, "PLY ERROR: fread() failed -- aborting.\n");
-		  exit(1);
+		  throw std::runtime_error("PLY ERROR: fread() failed -- aborting.\n");
 	  }
 	  
 	  
@@ -2398,8 +2399,9 @@ Read an element from a binary file.
 		  *uint_val = (unsigned int) *double_val;
 		  break;
 	  default:
-		  fprintf (stderr, "get_binary_item: bad type = %d\n", type);
-		  exit (-1);
+		  char error[1024];
+		  snprintf(error, sizeof(error), "get_binary_item: bad type = %d\n", type);
+		  throw std::runtime_error(error);
 	  }
   }
   
@@ -2459,8 +2461,9 @@ Read an element from a binary file.
 		  break;
 		  
 	  default:
-		  fprintf (stderr, "get_ascii_item: bad type = %d\n", type);
-		  exit (-1);
+		  char error[1024];
+		  snprintf(error, sizeof(error), "get_ascii_item: bad type = %d\n", type);
+		  throw std::runtime_error(error);
 	  }
   }
   
@@ -2537,8 +2540,9 @@ Read an element from a binary file.
 		  *pdouble = double_val;
 		  break;
 	  default:
-		  fprintf (stderr, "store_item: bad type = %d\n", type);
-		  exit (-1);
+		  char error[1024];
+		  snprintf(error, sizeof(error), "store_item: bad type = %d\n", type);
+		  throw std::runtime_error(error);
 	  }
   }
   
@@ -2724,4 +2728,3 @@ Read an element from a binary file.
 	  
 	  return (ptr);
   }
-  

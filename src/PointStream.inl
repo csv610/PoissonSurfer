@@ -27,7 +27,7 @@ DAMAGE.
 */
 
 template< class Real >
-MemoryPointStream< Real >::MemoryPointStream( size_t pointCount , std::pair< Point3D< Real > , Point3D< Real > >* points ){ _points = points , _pointCount = pointCount , _current = 0; }
+MemoryPointStream< Real >::MemoryPointStream( size_t pointCount , const std::pair< Point3D< Real > , Point3D< Real > >* points ){ _points = points , _pointCount = pointCount , _current = 0; }
 template< class Real >
 MemoryPointStream< Real >::~MemoryPointStream( void ){ ; }
 template< class Real >
@@ -45,7 +45,7 @@ template< class Real >
 ASCIIPointStream< Real >::ASCIIPointStream( const char* fileName )
 {
 	_fp = fopen( fileName , "r" );
-	if( !_fp ) fprintf( stderr , "Failed to open file for reading: %s\n" , fileName ) , exit( 0 );
+	if( !_fp ) fprintf( stderr , "Failed to open file for reading: %s\n" , fileName ) , throw std::runtime_error("Fatal error");
 }
 template< class Real >
 ASCIIPointStream< Real >::~ASCIIPointStream( void )
@@ -69,7 +69,7 @@ BinaryPointStream< Real >::BinaryPointStream( const char* fileName )
 {
 	_pointsInBuffer = _currentPointIndex = 0;
 	_fp = fopen( fileName , "rb" );
-	if( !_fp ) fprintf( stderr , "Failed to open file for reading: %s\n" , fileName ) , exit( 0 );
+	if( !_fp ) fprintf( stderr , "Failed to open file for reading: %s\n" , fileName ) , throw std::runtime_error("Fatal error");
 }
 template< class Real >
 BinaryPointStream< Real >::~BinaryPointStream( void )
@@ -125,7 +125,7 @@ void PLYPointStream< Real >::reset( void )
 	if( !_ply )
 	{
 		fprintf( stderr, "[ERROR] Failed to open ply file for reading: %s\n" , _fileName );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	bool foundVertices = false;
 	for( int i=0 ; i<_nr_elems ; i++ )
@@ -137,7 +137,7 @@ void PLYPointStream< Real >::reset( void )
 		if( !plist )
 		{
 			fprintf( stderr , "[ERROR] Failed to get element description: %s\n" , elem_name );
-			exit( 0 );
+			throw std::runtime_error("Fatal error");
 		}	
 
 		if( equal_strings( "vertex" , elem_name ) )
@@ -148,7 +148,7 @@ void PLYPointStream< Real >::reset( void )
 				if( !ply_get_property( _ply , elem_name , &(PlyOrientedVertex< Real >::Properties[i]) ) )
 				{
 					fprintf( stderr , "[ERROR] Failed to find property in ply file: %s\n" , PlyOrientedVertex< Real >::Properties[i].name );
-					exit( 0 );
+					throw std::runtime_error("Fatal error");
 				}
 		}
 		for( int j=0 ; j<nr_props ; j++ )
@@ -162,7 +162,7 @@ void PLYPointStream< Real >::reset( void )
 	if( !foundVertices )
 	{
 		fprintf( stderr , "[ERROR] Could not find vertices in ply file\n" );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 }
 template< class Real >

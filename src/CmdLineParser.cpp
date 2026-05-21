@@ -44,7 +44,7 @@ cmdLineReadable::cmdLineReadable(const char* name)
 	this->name=new char[strlen(name)+1];
 	strcpy(this->name,name);
 }
-cmdLineReadable::~cmdLineReadable(void)
+cmdLineReadable::~cmdLineReadable()
 {
 	if(name) delete[] name;
 	name=NULL;
@@ -73,7 +73,7 @@ int cmdLineInt::read(char** argv,int argc){
 }
 void cmdLineInt::writeValue(char* str)
 {
-	sprintf(str,"%d",value);
+	snprintf(str, 1024, "%d",value);
 }
 
 //////////////////
@@ -83,7 +83,7 @@ cmdLineFloat::cmdLineFloat(const char* name) : cmdLineReadable(name) {value=0;}
 cmdLineFloat::cmdLineFloat(const char* name, const float& v) : cmdLineReadable(name) {value=v;}
 int cmdLineFloat::read(char** argv,int argc){
 	if(argc>0){
-		value=(float)atof(argv[0]);
+		value=static_cast<float>(atof(argv[0]));
 		set=true;
 		return 1;
 	}
@@ -91,14 +91,14 @@ int cmdLineFloat::read(char** argv,int argc){
 }
 void cmdLineFloat::writeValue(char* str)
 {
-	sprintf(str,"%f",value);
+	snprintf(str, 1024, "%f",value);
 }
 
 ///////////////////
 // cmdLineString //
 ///////////////////
 cmdLineString::cmdLineString(const char* name) : cmdLineReadable(name) {value=NULL;}
-cmdLineString::~cmdLineString(void)
+cmdLineString::~cmdLineString()
 {
 	if(value)	delete[] value;
 	value=NULL;
@@ -115,7 +115,7 @@ int cmdLineString::read(char** argv,int argc){
 }
 void cmdLineString::writeValue(char* str)
 {
-	sprintf(str,"%s",value);
+	snprintf(str, 1024, "%s",value);
 }
 
 ////////////////////
@@ -127,7 +127,7 @@ cmdLineStrings::cmdLineStrings(const char* name,int Dim) : cmdLineReadable(name)
 	values=new char*[Dim];
 	for(int i=0;i<Dim;i++)	values[i]=NULL;
 }
-cmdLineStrings::~cmdLineStrings(void)
+cmdLineStrings::~cmdLineStrings()
 {
 	for(int i=0;i<Dim;i++)
 	{
@@ -156,7 +156,8 @@ void cmdLineStrings::writeValue(char* str)
 	char* temp=str;
 	for(int i=0;i<Dim;i++)
 	{
-		sprintf(temp,"%s ",values[i]);
+		int remaining = 1024 - (int)(temp - str);
+		snprintf(temp, remaining>0 ? remaining : 0, "%s ", values[i]);
 		temp=str+strlen(str);
 	}
 }

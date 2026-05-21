@@ -41,7 +41,7 @@ public:
 	bool set;
 	char* name;
 	cmdLineReadable(const char* name);
-	virtual ~cmdLineReadable(void);
+	virtual ~cmdLineReadable();
 	virtual int read(char** argv,int argc);
 	virtual void writeValue(char* str);
 };
@@ -94,7 +94,7 @@ class cmdLineStrings : public cmdLineReadable {
 public:
 	char** values;
 	cmdLineStrings(const char* name,int Dim);
-	~cmdLineStrings(void);
+	~cmdLineStrings();
 	int read(char** argv,int argc);
 	void writeValue(char* str);
 };

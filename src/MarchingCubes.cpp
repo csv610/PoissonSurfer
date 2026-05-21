@@ -484,7 +484,7 @@ void MarchingSquares::SetVertex(int e,const double values[Square::CORNERS],doubl
 			break;
 	}
 }
-double MarchingSquares::Interpolate(double v1,double v2){return v1/(v1-v2);}
+double MarchingSquares::Interpolate(double v1,double v2){ if( v1==v2 ) return 0.5; return v1/(v1-v2); }
 
 
 ///////////////////
@@ -888,7 +888,7 @@ void MarchingCubes::SetVertex( int e , const double values[Cube::CORNERS] , doub
 		break;
 	}
 }
-double MarchingCubes::Interpolate( double v1 , double v2 ) { return v1/(v1-v2); }
+double MarchingCubes::Interpolate( double v1 , double v2 ){ if( v1==v2 ) return 0.5; return v1/(v1-v2); }
 
 
 ///////////////////////////////////
@@ -1021,4 +1021,4 @@ void MarchingCubes::SetVertex( int e , const float values[Cube::CORNERS] , float
 		break;
 	}
 }
-float MarchingCubes::Interpolate( float v1 , float v2 ){ return v1/(v1-v2); }
+float MarchingCubes::Interpolate( float v1 , float v2 ){ if( v1==v2 ) return 0.5f; return v1/(v1-v2); }

@@ -31,7 +31,7 @@ void DumpOutput2( char* str , const char* format , ... ) {
     vprintf( format , args );
     va_end( args );
     va_start( args , format );
-    vsprintf( str , format , args );
+    vsnprintf( str , 1024 , format , args );
     va_end( args );
 }
 
@@ -66,7 +66,7 @@ int Remesh(const std::vector<std::pair<Point3D<Real>, Point3D<Real>>>& pointClou
     std::vector<Real> kernelDensityWeights;
     std::vector<Real> centerWeights;
     
-    MemoryPointStream<Real> stream(pointCloud.size(), const_cast<std::pair<Point3D<Real>, Point3D<Real>>*>(pointCloud.data()));
+    MemoryPointStream<Real> stream(pointCloud.size(), pointCloud.data());
     
     XForm4x4<Real> xForm = XForm4x4<Real>::Identity();
     
@@ -92,7 +92,9 @@ int Remesh(const std::vector<std::pair<Point3D<Real>, Point3D<Real>>>& pointClou
     
     // Write out the mesh
     XForm4x4<Real> iXForm = xForm.inverse();
-    PlyWritePolygons(const_cast<char*>(outPath.c_str()), &mesh, PLY_BINARY_NATIVE, NULL, 0, iXForm);
+    std::vector<char> outBuf(outPath.begin(), outPath.end());
+    outBuf.push_back(0);
+    PlyWritePolygons(outBuf.data(), &mesh, PLY_BINARY_NATIVE, NULL, 0, iXForm);
 
     return (int)(mesh.inCorePoints.size() + mesh.outOfCorePointCount());
 }

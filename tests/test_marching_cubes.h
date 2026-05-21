@@ -123,11 +123,12 @@ void test_marching_cubes_has_roots() {
 
     for (int i = 0; i < Cube::CORNERS; i++) values[i] = 1.0;
     bool hasRoots = MarchingCubes::HasRoots(values, 0.0);
-    assert(hasRoots == true || hasRoots == false);
+    assert(hasRoots == false);
 
-    for (int i = 0; i < Cube::CORNERS; i++) values[i] = -1.0;
+    for (int i = 0; i < Cube::CORNERS/2; i++) values[i] = -1.0;
+    for (int i = Cube::CORNERS/2; i < Cube::CORNERS; i++) values[i] = 1.0;
     hasRoots = MarchingCubes::HasRoots(values, 0.0);
-    assert(hasRoots == true || hasRoots == false);
+    assert(hasRoots == true);
 }
 
 void test_marching_cubes_add_triangles() {
@@ -170,7 +171,7 @@ void test_marching_squares_get_index() {
 void test_marching_squares_has_roots() {
     unsigned char idx = 0;
     bool hasRoots = MarchingSquares::HasRoots(idx);
-    assert(hasRoots == true || hasRoots == false);
+    assert(hasRoots == false);
 }
 
 void test_square_edge_corners() {

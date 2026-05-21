@@ -36,7 +36,7 @@ class Polynomial{
 public:
 	double coefficients[Degree+1];
 
-	Polynomial(void);
+	Polynomial();
 	template<int Degree2>
 	Polynomial(const Polynomial<Degree2>& P);
 	double operator()( double t ) const;
@@ -44,14 +44,14 @@ public:
 
 	int operator == (const Polynomial& p) const;
 	int operator != (const Polynomial& p) const;
-	int isZero(void) const;
-	void setZero(void);
+	int isZero() const;
+	void setZero();
 
 	template<int Degree2>
 	Polynomial& operator  = (const Polynomial<Degree2> &p);
 	Polynomial& operator += (const Polynomial& p);
 	Polynomial& operator -= (const Polynomial& p);
-	Polynomial  operator -  (void) const;
+	Polynomial  operator -  () const;
 	Polynomial  operator +  (const Polynomial& p) const;
 	Polynomial  operator -  (const Polynomial& p) const;
 	template<int Degree2>
@@ -69,10 +69,10 @@ public:
 	Polynomial scale( double s ) const;
 	Polynomial shift( double t ) const;
 
-	Polynomial<Degree-1> derivative(void) const;
-	Polynomial<Degree+1> integral(void) const;
+	Polynomial<Degree-1> derivative() const;
+	Polynomial<Degree+1> integral() const;
 
-	void printnl(void) const;
+	void printnl() const;
 
 	Polynomial& addScaled(const Polynomial& p,double scale);
 

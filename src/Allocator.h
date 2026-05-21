@@ -29,6 +29,8 @@ DAMAGE.
 #ifndef ALLOCATOR_INCLUDED
 #define ALLOCATOR_INCLUDED
 #include <vector>
+#include <cstdio>
+#include <stdexcept>
 
 class AllocatorState{
 public:
@@ -49,19 +51,19 @@ class Allocator
 	int index , remains;
 	std::vector< T* > memory;
 public:
-	Allocator( void ){ blockSize = index = remains = 0; }
-	~Allocator( void ){ reset(); }
+	Allocator(){ blockSize = index = remains = 0; }
+	~Allocator(){ reset(); }
 
 	/** This method is the allocators destructor. It frees up any of the memory that
 	  * it has allocated. */
-	void reset( void )
+	void reset()
 	{
 		for(size_t i=0;i<memory.size();i++){delete[] memory[i];}
 		memory.clear();
 		blockSize=index=remains=0;
 	}
 	/** This method returns the memory state of the allocator. */
-	AllocatorState getState( void ) const
+	AllocatorState getState() const
 	{
 		AllocatorState s;
 		s.index=index;
@@ -74,7 +76,7 @@ public:
 	  * allocated available for re-allocation. Note that it does it not call the constructor
 	  * again, so after this method has been called, assumptions about the state of the values
 	  * in memory are no longer valid. */
-	void rollBack(void)
+	void rollBack()
 	{
 		if( memory.size() )
 		{
@@ -143,13 +145,18 @@ public:
 	{
 		T* mem;
 		if( !elements ) return NULL;
-		if( elements>blockSize ) fprintf( stderr , "[ERROR] Allocator: elements bigger than block-size: %d>%d\n" , elements , blockSize ) , exit( 0 );
+		if( elements>blockSize )
+		{
+			char message[1024];
+			snprintf( message , sizeof(message) , "[ERROR] Allocator: elements bigger than block-size: %d>%d\n" , elements , blockSize );
+			throw std::runtime_error( message );
+		}
 		if( remains<elements )
 		{
 			if( index==memory.size()-1 )
 			{
 				mem = new T[blockSize];
-				if( !mem ) fprintf( stderr , "[ERROR] Failed to allocate memory\n" ) , exit(0);
+				if( !mem ) throw std::runtime_error( "[ERROR] Failed to allocate memory\n" );
 				memory.push_back( mem );
 			}
 			index++;

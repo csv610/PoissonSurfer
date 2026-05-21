@@ -29,13 +29,13 @@ DAMAGE.
 // MinimalAreaTriangulation //
 //////////////////////////////
 template <class Real>
-MinimalAreaTriangulation<Real>::MinimalAreaTriangulation(void)
+MinimalAreaTriangulation<Real>::MinimalAreaTriangulation()
 {
 	bestTriangulation=NULL;
 	midPoint=NULL;
 }
 template <class Real>
-MinimalAreaTriangulation<Real>::~MinimalAreaTriangulation(void)
+MinimalAreaTriangulation<Real>::~MinimalAreaTriangulation()
 {
 	if(bestTriangulation)
 		delete[] bestTriangulation;

@@ -56,7 +56,8 @@ void cmdLineIntArray<Dim>::writeValue(char* str)
 	char* temp=str;
 	for(int i=0;i<Dim;i++)
 	{
-		sprintf(temp,"%d ",values[i]);
+		int remaining = 1024 - (int)(temp - str);
+		snprintf(temp, remaining>0 ? remaining : 0, "%d ", values[i]);
 		temp=str+strlen(str);
 	}
 }
@@ -79,7 +80,7 @@ int cmdLineFloatArray<Dim>::read(char** argv,int argc)
 {
 	if(argc>=Dim)
 	{
-		for(int i=0;i<Dim;i++)	values[i]=(float)atof(argv[i]);
+		for(int i=0;i<Dim;i++)	values[i]=static_cast<float>(atof(argv[i]));
 		set=true;
 		return Dim;
 	}
@@ -91,7 +92,8 @@ void cmdLineFloatArray<Dim>::writeValue(char* str)
 	char* temp=str;
 	for(int i=0;i<Dim;i++)
 	{
-		sprintf(temp,"%f ",values[i]);
+		int remaining = 1024 - (int)(temp - str);
+		snprintf(temp, remaining>0 ? remaining : 0, "%f ", values[i]);
 		temp=str+strlen(str);
 	}
 }
@@ -106,7 +108,7 @@ cmdLineStringArray<Dim>::cmdLineStringArray(const char* name) : cmdLineReadable(
 	for(int i=0;i<Dim;i++)	values[i]=NULL;
 }
 template<int Dim>
-cmdLineStringArray<Dim>::~cmdLineStringArray(void)
+cmdLineStringArray<Dim>::~cmdLineStringArray()
 {
 	for(int i=0;i<Dim;i++)
 	{
@@ -135,7 +137,8 @@ void cmdLineStringArray<Dim>::writeValue(char* str)
 	char* temp=str;
 	for(int i=0;i<Dim;i++)
 	{
-		sprintf(temp,"%s ",values[i]);
+		int remaining = 1024 - (int)(temp - str);
+		snprintf(temp, remaining>0 ? remaining : 0, "%s ", values[i]);
 		temp=str+strlen(str);
 	}
 }

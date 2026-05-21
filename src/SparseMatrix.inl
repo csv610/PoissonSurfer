@@ -38,16 +38,16 @@ DAMAGE.
 ///////////////////////////////////////
 
 template< class T >
-void SparseMatrix< T >::_init( void )
+void SparseMatrix< T >::_init()
 {
 	_contiguous = false;
 	_maxEntriesPerRow = 0;
-	rows = 0;
-	rowSizes = NullPointer< int >( );
-	m_ppElements = NullPointer< Pointer( MatrixEntry< T > ) >( );
+	_rows = 0;
+	_rowSizes = NullPointer< int >( );
+	_m_ppElements = NullPointer< Pointer( MatrixEntry< T > ) >( );
 }
 
-template< class T > SparseMatrix< T >::SparseMatrix( void ){  _init(); }
+template< class T > SparseMatrix< T >::SparseMatrix(){  _init(); }
 
 template< class T > SparseMatrix< T >::SparseMatrix( int rows                        ){ _init() , Resize( rows ); }
 template< class T > SparseMatrix< T >::SparseMatrix( int rows , int maxEntriesPerRow ){ _init() , Resize( rows , maxEntriesPerRow ); }
@@ -56,36 +56,36 @@ template< class T >
 SparseMatrix< T >::SparseMatrix( const SparseMatrix& M )
 {
 	_init();
-	if( M._contiguous ) Resize( M.rows , M._maxEntriesPerRow );
-	else                Resize( M.rows );
-	for( int i=0 ; i<rows ; i++ )
+	if( M._contiguous ) Resize( M.rows() , M._maxEntriesPerRow );
+	else                Resize( M.rows() );
+	for( int i=0 ; i<_rows ; i++ )
 	{
-		SetRowSize( i , M.rowSizes[i] );
-		memcpy( (*this)[i] , M[i] , sizeof( MatrixEntry< T > ) * rowSizes[i] );
+		SetRowSize( i , M.rowSize(i) );
+		memcpy( (*this)[i] , M[i] , sizeof( MatrixEntry< T > ) * _rowSizes[i] );
 	}
 }
 template<class T>
-int SparseMatrix<T>::Entries( void ) const
+int SparseMatrix<T>::Entries() const
 {
 	int e = 0;
-	for( int i=0 ; i<rows ; i++ ) e += int( rowSizes[i] );
+	for( int i=0 ; i<_rows ; i++ ) e += int( _rowSizes[i] );
 	return e;
 }
 template<class T>
 SparseMatrix<T>& SparseMatrix<T>::operator = (const SparseMatrix<T>& M)
 {
-	if( M._contiguous ) Resize( M.rows , M._maxEntriesPerRow );
-	else                Resize( M.rows );
-	for( int i=0 ; i<rows ; i++ )
+	if( M._contiguous ) Resize( M.rows() , M._maxEntriesPerRow );
+	else                Resize( M.rows() );
+	for( int i=0 ; i<_rows ; i++ )
 	{
-		SetRowSize( i , M.rowSizes[i] );
-		memcpy( (*this)[i] , M[i] , sizeof( MatrixEntry< T > ) * rowSizes[i] );
+		SetRowSize( i , M.rowSize(i) );
+		memcpy( (*this)[i] , M[i] , sizeof( MatrixEntry< T > ) * _rowSizes[i] );
 	}
 	return *this;
 }
 
 template<class T>
-SparseMatrix<T>::~SparseMatrix( void ){ Resize( 0 ); }
+SparseMatrix<T>::~SparseMatrix(){ Resize( 0 ); }
 
 template< class T >
 bool SparseMatrix< T >::write( const char* fileName ) const
@@ -108,9 +108,9 @@ bool SparseMatrix< T >::read( const char* fileName )
 template< class T >
 bool SparseMatrix< T >::write( FILE* fp ) const
 {
-	if( fwrite( &rows , sizeof( int ) , 1 , fp )!=1 ) return false;
-	if( fwrite( rowSizes , sizeof( int ) , rows , fp )!=rows ) return false;
-	for( int i=0 ; i<rows ; i++ ) if( fwrite( (*this)[i] , sizeof( MatrixEntry< T > ) , rowSizes[i] , fp )!=rowSizes[i] ) return false;
+	if( fwrite( &_rows , sizeof( int ) , 1 , fp )!=1 ) return false;
+	if( fwrite( _rowSizes , sizeof( int ) , _rows , fp )!=_rows ) return false;
+	for( int i=0 ; i<_rows ; i++ ) if( fwrite( (*this)[i] , sizeof( MatrixEntry< T > ) , _rowSizes[i] , fp )!=_rowSizes[i] ) return false;
 	return true;
 }
 template< class T >
@@ -119,13 +119,13 @@ bool SparseMatrix< T >::read( FILE* fp )
 	int r;
 	if( fread( &r , sizeof( int ) , 1 , fp )!=1 ) return false;
 	Resize( r );
-	if( fread( rowSizes , sizeof( int ) , rows , fp )!=rows ) return false;
-	for( int i=0 ; i<rows ; i++ )
+	if( fread( _rowSizes , sizeof( int ) , _rows , fp )!=_rows ) return false;
+	for( int i=0 ; i<_rows ; i++ )
 	{
-		r = rowSizes[i];
-		rowSizes[i] = 0;
+		r = _rowSizes[i];
+		_rowSizes[i] = 0;
 		SetRowSize( i , r );
-		if( fread( (*this)[i] , sizeof( MatrixEntry< T > ) , rowSizes[i] , fp )!=rowSizes[i] ) return false;
+		if( fread( (*this)[i] , sizeof( MatrixEntry< T > ) , _rowSizes[i] , fp )!=_rowSizes[i] ) return false;
 	}
 	return true;
 }
@@ -134,19 +134,19 @@ bool SparseMatrix< T >::read( FILE* fp )
 template< class T >
 void SparseMatrix< T >::Resize( int r )
 {
-	if( rows>0 )
+	if( _rows>0 )
 	{
-		if( _contiguous ){ if( _maxEntriesPerRow ) FreePointer( m_ppElements[0] ); }
-		else for( int i=0 ; i<rows ; i++ ){ if( rowSizes[i] ) FreePointer( m_ppElements[i] ); }
-		FreePointer( m_ppElements );
-		FreePointer( rowSizes );
+		if( _contiguous ){ if( _maxEntriesPerRow ) FreePointer( _m_ppElements[0] ); }
+		else for( int i=0 ; i<_rows ; i++ ){ if( _rowSizes[i] ) FreePointer( _m_ppElements[i] ); }
+		FreePointer( _m_ppElements );
+		FreePointer( _rowSizes );
 	}
-	rows = r;
+	_rows = r;
 	if( r )
 	{
-		rowSizes = AllocPointer< int >( r );
-		m_ppElements = AllocPointer< Pointer( MatrixEntry< T > ) >( r );
-		memset( rowSizes , 0 , sizeof( int ) * r );
+		_rowSizes = AllocPointer< int >( r );
+		_m_ppElements = AllocPointer< Pointer( MatrixEntry< T > ) >( r );
+		memset( _rowSizes , 0 , sizeof( int ) * r );
 	}
 	_contiguous = false;
 	_maxEntriesPerRow = 0;
@@ -154,21 +154,21 @@ void SparseMatrix< T >::Resize( int r )
 template< class T >
 void SparseMatrix< T >::Resize( int r , int e )
 {
-	if( rows>0 )
+	if( _rows>0 )
 	{
-		if( _contiguous ){ if( _maxEntriesPerRow ) FreePointer( m_ppElements[0] ); }
-		else for( int i=0 ; i<rows ; i++ ){ if( rowSizes[i] ) FreePointer( m_ppElements[i] ); }
-		FreePointer( m_ppElements );
-		FreePointer( rowSizes );
+		if( _contiguous ){ if( _maxEntriesPerRow ) FreePointer( _m_ppElements[0] ); }
+		else for( int i=0 ; i<_rows ; i++ ){ if( _rowSizes[i] ) FreePointer( _m_ppElements[i] ); }
+		FreePointer( _m_ppElements );
+		FreePointer( _rowSizes );
 	}
-	rows = r;
+	_rows = r;
 	if( r )
 	{
-		rowSizes = AllocPointer< int >( r );
-		m_ppElements = AllocPointer< Pointer( MatrixEntry< T > ) >( r );
-		m_ppElements[0] = AllocPointer< MatrixEntry< T > >( r * e );
-		memset( rowSizes , 0 , sizeof( int ) * r );
-		for( int i=1 ; i<r ; i++ ) m_ppElements[i] = m_ppElements[i-1] + e;
+		_rowSizes = AllocPointer< int >( r );
+		_m_ppElements = AllocPointer< Pointer( MatrixEntry< T > ) >( r );
+		_m_ppElements[0] = AllocPointer< MatrixEntry< T > >( r * e );
+		memset( _rowSizes , 0 , sizeof( int ) * r );
+		for( int i=1 ; i<r ; i++ ) _m_ppElements[i] = _m_ppElements[i-1] + e;
 	}
 	_contiguous = true;
 	_maxEntriesPerRow = e;
@@ -179,15 +179,15 @@ void SparseMatrix< T >::SetRowSize( int row , int count )
 {
 	if( _contiguous )
 	{
-		if( count>_maxEntriesPerRow ) fprintf( stderr , "[ERROR] Cannot set row size on contiguous matrix: %d<=%d\n" , count , _maxEntriesPerRow ) , exit( 0 );
-		rowSizes[row] = count;
+		if( count>_maxEntriesPerRow ) fprintf( stderr , "[ERROR] Cannot set row size on contiguous matrix: %d<=%d\n" , count , _maxEntriesPerRow ) , throw std::runtime_error("Fatal error");
+		_rowSizes[row] = count;
 	}
-	else if( row>=0 && row<rows )
+	else if( row>=0 && row<_rows )
 	{
-		if( rowSizes[row] ) FreePointer( m_ppElements[row] );
-		if( count>0 ) m_ppElements[row] = AllocPointer< MatrixEntry< T > >( count );
+		if( _rowSizes[row] ) FreePointer( _m_ppElements[row] );
+		if( count>0 ) _m_ppElements[row] = AllocPointer< MatrixEntry< T > >( count );
 		// [WARNING] Why wasn't this line here before???
-		rowSizes[row] = count;
+		_rowSizes[row] = count;
 	}
 }
 
@@ -211,7 +211,7 @@ SparseMatrix<T> SparseMatrix<T>::operator * (const T& V) const
 template<class T>
 SparseMatrix<T>& SparseMatrix<T>::operator *= (const T& V)
 {
-	for( int i=0 ; i<rows ; i++ ) for( int ii=0 ; ii<rowSizes[i] ; i++ ) m_ppElements[i][ii].Value *= V;
+	for( int i=0 ; i<_rows ; i++ ) for( int ii=0 ; ii<_rowSizes[i] ; i++ ) _m_ppElements[i][ii].Value *= V;
 	return *this;
 }
 
@@ -219,7 +219,7 @@ template<class T>
 template<class T2>
 Vector<T2> SparseMatrix<T>::Multiply( const Vector<T2>& V ) const
 {
-	Vector<T2> R( rows );
+	Vector<T2> R( _rows );
 	Multiply( V , R );
 	return R;
 }
@@ -229,19 +229,19 @@ template<class T2>
 void SparseMatrix<T>::Multiply( const Vector<T2>& In , Vector<T2>& Out , int threads ) const
 {
 #pragma omp parallel for num_threads( threads ) schedule( static )
-	for( int i=0 ; i<rows ; i++ )
+	for( int i=0 ; i<_rows ; i++ )
 	{
 		T2 temp = T2();
 		temp *= 0;
 #if 1
-		ConstPointer( MatrixEntry< T > ) start = m_ppElements[i];
-		ConstPointer( MatrixEntry< T > ) end = start + rowSizes[i];
+		ConstPointer( MatrixEntry< T > ) start = _m_ppElements[i];
+		ConstPointer( MatrixEntry< T > ) end = start + _rowSizes[i];
 		ConstPointer( MatrixEntry< T > ) e;
 		for( e=start ; e!=end ; e++ ) temp += In[ e->N ] * e->Value;
 		Out[i] = temp;
 #else
-		for( int j=0 ; j<rowSizes[i] ; j++ ) temp += m_ppElements[i][j].Value * In.m_pV[m_ppElements[i][j].N];
-		Out.m_pV[i] = temp;
+		for( int j=0 ; j<_rowSizes[i] ; j++ ) temp += _m_ppElements[i][j].Value * In[_m_ppElements[i][j].N];
+		Out[i] = temp;
 #endif
 	}
 }
@@ -268,7 +268,7 @@ int SparseMatrix<T>::SolveSymmetric( const SparseMatrix<T>& M , const Vector<T2>
 	r = b - r;
 	Vector< T2 > d = r;
 	double delta_new , delta_0;
-	for( int i=0 ; i<r.Dimensions() ; i++ ) delta_new += r.m_pV[i] * r.m_pV[i];
+	for( int i=0 ; i<r.Dimensions() ; i++ ) delta_new += r[i] * r[i];
 	delta_0 = delta_new;
 	if( delta_new<eps ) return 0;
 	int ii;
@@ -278,10 +278,10 @@ int SparseMatrix<T>::SolveSymmetric( const SparseMatrix<T>& M , const Vector<T2>
 	{
 		M.Multiply( d , q , threads );
         double dDotQ = 0 , alpha = 0;
-		for( int i=0 ; i<d.Dimensions() ; i++ ) dDotQ += d.m_pV[i] * q.m_pV[i];
+		for( int i=0 ; i<d.Dimensions() ; i++ ) dDotQ += d[i] * q[i];
 		alpha = delta_new / dDotQ;
 #pragma omp parallel for num_threads( threads ) schedule( static )
-		for( int i=0 ; i<r.Dimensions() ; i++ ) solution.m_pV[i] += d.m_pV[i] * T2( alpha );
+		for( int i=0 ; i<r.Dimensions() ; i++ ) solution[i] += d[i] * T2( alpha );
 		if( !(ii%50) )
 		{
 			r.Resize( solution.Dimensions() );
@@ -290,14 +290,14 @@ int SparseMatrix<T>::SolveSymmetric( const SparseMatrix<T>& M , const Vector<T2>
 		}
 		else
 #pragma omp parallel for num_threads( threads ) schedule( static )
-			for( int i=0 ; i<r.Dimensions() ; i++ ) r.m_pV[i] = r.m_pV[i] - q.m_pV[i] * T2(alpha);
+			for( int i=0 ; i<r.Dimensions() ; i++ ) r[i] = r[i] - q[i] * T2(alpha);
 
 		double delta_old = delta_new , beta;
 		delta_new = 0;
-		for( int i=0 ; i<r.Dimensions() ; i++ ) delta_new += r.m_pV[i]*r.m_pV[i];
+		for( int i=0 ; i<r.Dimensions() ; i++ ) delta_new += r[i]*r[i];
 		beta = delta_new / delta_old;
 #pragma omp parallel for num_threads( threads ) schedule( static )
-		for( int i=0 ; i<d.Dimensions() ; i++ ) d.m_pV[i] = r.m_pV[i] + d.m_pV[i] * T2( beta );
+		for( int i=0 ; i<d.Dimensions() ; i++ ) d[i] = r[i] + d[i] * T2( beta );
 	}
 	return ii;
 }
@@ -345,14 +345,14 @@ template<class T>
 template<class T2>
 Vector<T2> SparseSymmetricMatrix<T>::Multiply( const Vector<T2>& V ) const
 {
-	Vector<T2> R( SparseMatrix< T >::rows );
+	Vector<T2> R( SparseMatrix< T >::_rows );
 
-	for(int i=0; i<SparseMatrix< T >::rows; i++){
-		for(int ii=0;ii<SparseMatrix< T >::rowSizes[i];ii++)
+	for(int i=0; i<SparseMatrix< T >::_rows; i++){
+		for(int ii=0;ii<SparseMatrix< T >::_rowSizes[i];ii++)
 		{
-			int j=SparseMatrix< T >::m_ppElements[i][ii].N;
-			R(i) += SparseMatrix< T >::m_ppElements[i][ii].Value * V.m_pV[j];
-			R(j) += SparseMatrix< T >::m_ppElements[i][ii].Value * V.m_pV[i];
+			int j=SparseMatrix< T >::_m_ppElements[i][ii].N;
+			R(i) += SparseMatrix< T >::_m_ppElements[i][ii].Value * V[j];
+			R(j) += SparseMatrix< T >::_m_ppElements[i][ii].Value * V[i];
 		}
 	}
 	return R;
@@ -368,13 +368,13 @@ void SparseSymmetricMatrix<T>::Multiply( const Vector<T2>& In , Vector<T2>& Out 
 	T2 dcTerm = T2( 0 );
 	if( addDCTerm )
 	{
-		for( int i=0 ; i<SparseMatrix< T >::rows ; i++ ) dcTerm += in[i];
-		dcTerm /= SparseMatrix< T >::rows;
+		for( int i=0 ; i<SparseMatrix< T >::_rows ; i++ ) dcTerm += in[i];
+		dcTerm /= SparseMatrix< T >::_rows;
 	}
-	for( int i=0 ; i<SparseMatrix< T >::rows ; i++ )
+	for( int i=0 ; i<SparseMatrix< T >::_rows ; i++ )
 	{
-		const MatrixEntry<T>* temp = SparseMatrix< T >::m_ppElements[i];
-		const MatrixEntry<T>* end = temp + SparseMatrix< T >::rowSizes[i];
+		const MatrixEntry<T>* temp = SparseMatrix< T >::_m_ppElements[i];
+		const MatrixEntry<T>* end = temp + SparseMatrix< T >::_rowSizes[i];
 		const T2& in_i_ = in[i];
 		T2 out_i = T2(0);
 		for( ; temp!=end ; temp++ )
@@ -386,7 +386,7 @@ void SparseSymmetricMatrix<T>::Multiply( const Vector<T2>& In , Vector<T2>& Out 
 		}
 		out[i] += out_i;
 	}
-	if( addDCTerm ) for( int i=0 ; i<SparseMatrix< T >::rows ; i++ ) out[i] += dcTerm;
+	if( addDCTerm ) for( int i=0 ; i<SparseMatrix< T >::_rows ; i++ ) out[i] += dcTerm;
 }
 template<class T>
 template<class T2>
@@ -403,13 +403,13 @@ void SparseSymmetricMatrix<T>::Multiply( const Vector<T2>& In , Vector<T2>& Out 
 		{
 			T2* out = OutScratch[t];
 			memset( out , 0 , sizeof( T2 ) * dim );
-			for( int i=(SparseMatrix< T >::rows*t)/threads ; i<(SparseMatrix< T >::rows*(t+1))/threads ; i++ )
+			for( int i=(SparseMatrix< T >::_rows*t)/threads ; i<(SparseMatrix< T >::_rows*(t+1))/threads ; i++ )
 			{
 				const T2& in_i_ = in[i];
 				T2& out_i_ = out[i];
 				ConstPointer( MatrixEntry< T > ) temp;
 				ConstPointer( MatrixEntry< T > ) end;
-				for( temp = SparseMatrix< T >::m_ppElements[i] , end = temp+SparseMatrix< T >::rowSizes[i] ; temp!=end ; temp++ )
+				for( temp = SparseMatrix< T >::_m_ppElements[i] , end = temp+SparseMatrix< T >::_rowSizes[i] ; temp!=end ; temp++ )
 				{
 					int j = temp->N;
 					T2 v = temp->Value;
@@ -437,13 +437,13 @@ void SparseSymmetricMatrix<T>::Multiply( const Vector<T2>& In , Vector<T2>& Out 
 		{
 			T2* out = OutScratch[t];
 			memset( out , 0 , sizeof( T2 ) * dim );
-			for( int i=(SparseMatrix< T >::rows*t)/threads ; i<(SparseMatrix< T >::rows*(t+1))/threads ; i++ )
+			for( int i=(SparseMatrix< T >::_rows*t)/threads ; i<(SparseMatrix< T >::_rows*(t+1))/threads ; i++ )
 			{
 				T2 in_i_ = in[i];
 				T2 out_i_ = T2();
 				ConstPointer( MatrixEntry< T > ) temp;
 				ConstPointer( MatrixEntry< T > ) end;
-				for( temp = SparseMatrix< T >::m_ppElements[i] , end = temp+SparseMatrix< T >::rowSizes[i] ; temp!=end ; temp++ )
+				for( temp = SparseMatrix< T >::_m_ppElements[i] , end = temp+SparseMatrix< T >::_rowSizes[i] ; temp!=end ; temp++ )
 				{
 					int j = temp->N;
 					T2 v = temp->Value;
@@ -480,8 +480,8 @@ void SparseSymmetricMatrix<T>::Multiply( const Vector<T2>& In , Vector<T2>& Out 
 		T2* out = OutScratch[t];
 		for( int i=bounds[t] ; i<bounds[t+1] ; i++ )
 		{
-			const MatrixEntry<T>* temp = SparseMatrix< T >::m_ppElements[i];
-			const MatrixEntry<T>* end = temp + SparseMatrix< T >::rowSizes[i];
+			const MatrixEntry<T>* temp = SparseMatrix< T >::_m_ppElements[i];
+			const MatrixEntry<T>* end = temp + SparseMatrix< T >::_rowSizes[i];
 			const T2& in_i_ = in[i];
 			T2& out_i_ = out[i];
 			for(  ; temp!=end ; temp++ )
@@ -546,7 +546,7 @@ void MultiplyAtomic( const SparseSymmetricMatrix< T >& A , const Vector< float >
 			for( int i=partition[t] ; i<partition[t+1] ; i++ )
 			{
 				const MatrixEntry< T >* temp = A[i];
-				const MatrixEntry< T >* end = temp + A.rowSizes[i];
+				const MatrixEntry< T >* end = temp + A.rowSize(i);
 				const float& in_i = in[i];
 				float out_i = 0.;
 				for( ; temp!=end ; temp++ )
@@ -560,10 +560,10 @@ void MultiplyAtomic( const SparseSymmetricMatrix< T >& A , const Vector< float >
 			}
 	else
 #pragma omp parallel for num_threads( threads )
-		for( int i=0 ; i<A.rows ; i++ )
+		for( int i=0 ; i<A.rows() ; i++ )
 		{
 			const MatrixEntry< T >* temp = A[i];
-			const MatrixEntry< T >* end = temp + A.rowSizes[i];
+			const MatrixEntry< T >* end = temp + A.rowSize(i);
 			const float& in_i = in[i];
 			float out_i = 0.f;
 			for( ; temp!=end ; temp++ )
@@ -589,7 +589,7 @@ void MultiplyAtomic( const SparseSymmetricMatrix< T >& A , const Vector< double 
 			for( int i=partition[t] ; i<partition[t+1] ; i++ )
 			{
 				const MatrixEntry< T >* temp = A[i];
-				const MatrixEntry< T >* end = temp + A.rowSizes[i];
+				const MatrixEntry< T >* end = temp + A.rowSize(i);
 				const double& in_i = in[i];
 				double out_i = 0.;
 				for( ; temp!=end ; temp++ )
@@ -603,10 +603,10 @@ void MultiplyAtomic( const SparseSymmetricMatrix< T >& A , const Vector< double 
 			}
 	else
 #pragma omp parallel for num_threads( threads )
-		for( int i=0 ; i<A.rows ; i++ )
+		for( int i=0 ; i<A.rows() ; i++ )
 		{
 			const MatrixEntry< T >* temp = A[i];
-			const MatrixEntry< T >* end = temp + A.rowSizes[i];
+			const MatrixEntry< T >* end = temp + A.rowSize(i);
 			const double& in_i = in[i];
 			double out_i = 0.;
 			for( ; temp!=end ; temp++ )
@@ -640,15 +640,15 @@ int SparseSymmetricMatrix< T >::SolveCGAtomic( const SparseSymmetricMatrix< T >&
 	std::vector< int > partition( threads+1 );
 	{
 		int eCount = 0;
-		for( int i=0 ; i<A.rows ; i++ ) eCount += A.rowSizes[i];
+		for( int i=0 ; i<A.rows() ; i++ ) eCount += A.rowSize(i);
 		partition[0] = 0;
 #pragma omp parallel for num_threads( threads )
 		for( int t=0 ; t<threads ; t++ )
 		{
 			int _eCount = 0;
-			for( int i=0 ; i<A.rows ; i++ )
+			for( int i=0 ; i<A.rows() ; i++ )
 			{
-				_eCount += A.rowSizes[i];
+				_eCount += A.rowSize(i);
 				if( _eCount*threads>=eCount*(t+1) )
 				{
 					partition[t+1] = i;
@@ -656,7 +656,7 @@ int SparseSymmetricMatrix< T >::SolveCGAtomic( const SparseSymmetricMatrix< T >&
 				}
 			}
 		}
-		partition[threads] = A.rows;
+		partition[threads] = A.rows();
 	}
 	if( solveNormal )
 	{
@@ -956,11 +956,11 @@ int SparseMatrix<T>::SolveJacobi( const SparseMatrix<T>& M , const Vector<T2>& d
 {
 	M.Multiply( x , Mx , threads );
 #if ZERO_TESTING_JACOBI
-	for( int j=0 ; j<int(M.rows) ; j++ ) if( diagonal[j] ) x[j+offset] += ( b[j+offset]-Mx[j] ) * sor / diagonal[j];
+	for( int j=0 ; j<int(M.rows()) ; j++ ) if( diagonal[j] ) x[j+offset] += ( b[j+offset]-Mx[j] ) * sor / diagonal[j];
 #else // !ZERO_TESTING_JACOBI
-	for( int j=0 ; j<int(M.rows) ; j++ ) x[j+offset] += ( b[j+offset]-Mx[j] ) * sor / diagonal[j];
+	for( int j=0 ; j<int(M.rows()) ; j++ ) x[j+offset] += ( b[j+offset]-Mx[j] ) * sor / diagonal[j];
 #endif // ZERO_TESTING_JACOBI
-	return M.rows;
+	return M.rows();
 }
 template< class T >
 template< class T2 >
@@ -968,15 +968,15 @@ int SparseMatrix<T>::SolveJacobi( const SparseMatrix<T>& M , const Vector<T2>& b
 {
 	M.Multiply( x , Mx , threads );
 #if ZERO_TESTING_JACOBI
-	for( int j=0 ; j<int(M.rows) ; j++ )
+	for( int j=0 ; j<int(M.rows()) ; j++ )
 	{
 		T diagonal = M[j][0].Value;
 		if( diagonal ) x[j+offset] += ( b[j+offset]-Mx[j] ) * sor / diagonal;
 	}
 #else // !ZERO_TESTING_JACOBI
-	for( int j=0 ; j<int(M.rows) ; j++ ) x[j+offset] += ( b[j+offset]-Mx[j] ) * sor / M[j][0].Value;
+	for( int j=0 ; j<int(M.rows()) ; j++ ) x[j+offset] += ( b[j+offset]-Mx[j] ) * sor / M[j][0].Value;
 #endif // ZERO_TESTING_JACOBI
-	return M.rows;
+	return M.rows();
 }
 template< class T >
 template< class T2 >
@@ -987,13 +987,13 @@ int SparseSymmetricMatrix<T>::SolveJacobi( const SparseSymmetricMatrix<T>& M , c
 	// solution_new[j] * diagonal[j] + ( Md[j] - solution_old[j] * diagonal[j] ) = b[j]
 	// solution_new[j] = ( b[j] - ( Md[j] - solution_old[j] * diagonal[j] ) ) / diagonal[j]
 	// solution_new[j] = ( b[j] - Md[j] ) / diagonal[j] + solution_old[j]
-	//		for( int j=0 ; j<int(M.rows) ; j++ ) x[j] += ( b[j]-Mx[j] ) / diagonal[j];
+	//		for( int j=0 ; j<int(M.rows()) ; j++ ) x[j] += ( b[j]-Mx[j] ) / diagonal[j];
 #if ZERO_TESTING_JACOBI
-	for( int j=0 ; j<int(M.rows) ; j++ ) if( diagonal[j] ) x[j] += ( b[j]-Mx[j] ) * sor / diagonal[j];
+	for( int j=0 ; j<int(M.rows()) ; j++ ) if( diagonal[j] ) x[j] += ( b[j]-Mx[j] ) * sor / diagonal[j];
 #else // !ZERO_TESTING_JACOBI
-	for( int j=0 ; j<int(M.rows) ; j++ ) x[j] += ( b[j]-Mx[j] ) * sor / diagonal[j];
+	for( int j=0 ; j<int(M.rows()) ; j++ ) x[j] += ( b[j]-Mx[j] ) * sor / diagonal[j];
 #endif // ZERO_TESTING_JACOBI
-	return M.rows;
+	return M.rows();
 }
 template< class T >
 template< class T2 >
@@ -1004,15 +1004,15 @@ int SparseSymmetricMatrix<T>::SolveJacobi( const SparseSymmetricMatrix<T>& M , c
 	// solution_new[j] * diagonal[j] + ( Md[j] - solution_old[j] * diagonal[j] ) = b[j]
 	// solution_new[j] = ( b[j] - ( Md[j] - solution_old[j] * diagonal[j] ) ) / diagonal[j]
 	// solution_new[j] = ( b[j] - Md[j] ) / diagonal[j] + solution_old[j]
-	//		for( int j=0 ; j<int(M.rows) ; j++ ) x[j] += ( b[j]-Mx[j] ) / diagonal[j];
+	//		for( int j=0 ; j<int(M.rows()) ; j++ ) x[j] += ( b[j]-Mx[j] ) / diagonal[j];
 #if ZERO_TESTING_JACOBI
 #pragma omp parallel for num_threads( scratch.threads() )
-	for( int j=0 ; j<int(M.rows) ; j++ ) if( diagonal[j] ) x[j] += ( b[j]-Mx[j] ) * sor / diagonal[j];
+	for( int j=0 ; j<int(M.rows()) ; j++ ) if( diagonal[j] ) x[j] += ( b[j]-Mx[j] ) * sor / diagonal[j];
 #else // !ZERO_TESTING_JACOBI
 #pragma omp parallel for num_threads( scratch.threads() )
-	for( int j=0 ; j<int(M.rows) ; j++ ) x[j] += ( b[j]-Mx[j] ) * sor / diagonal[j];
+	for( int j=0 ; j<int(M.rows()) ; j++ ) x[j] += ( b[j]-Mx[j] ) * sor / diagonal[j];
 #endif // ZERO_TESTING_JACOBI
-	return M.rows;
+	return M.rows();
 }
 template< class T >
 template< class T2 >
@@ -1020,7 +1020,7 @@ int SparseSymmetricMatrix<T>::SolveJacobi( const SparseSymmetricMatrix<T>& M , c
 {
 	Vector< T2 > diagonal , Mx;
 	M.getDiagonal( diagonal );
-	Mx.Resize( M.rows );
+	Mx.Resize( M.rows() );
 	for( int i=0 ; i<iters ; i++ ) SolveJacobi( M , diagonal , b , x , Mx , sor , reset );
 	return iters;
 }
@@ -1030,7 +1030,7 @@ int SparseSymmetricMatrix<T>::SolveJacobi( const SparseSymmetricMatrix<T>& M , c
 {
 	Vector< T2 > diagonal , Mx;
 	M.getDiagonal( diagonal , scratch.threads() );
-	Mx.Resize( M.rows );
+	Mx.Resize( M.rows() );
 	for( int i=0 ; i<iters ; i++ ) SolveJacobi( M , diagonal , b , x , scratch , Mx , sor , reset );
 	return iters;
 }
@@ -1041,7 +1041,7 @@ int SparseMatrix<T>::SolveGS( const SparseMatrix<T>& M , const Vector<T2>& diago
 #define ITERATE                                                         \
 	{                                                                   \
 		ConstPointer( MatrixEntry< T > ) start = M[j];                  \
-		ConstPointer( MatrixEntry< T > ) end = start + M.rowSizes[j];   \
+		ConstPointer( MatrixEntry< T > ) end = start + M.rowSize(j);   \
 		ConstPointer( MatrixEntry< T > ) e;                             \
 		T2 _b = b[j+offset];                                            \
 		for( e=start ; e!=end ; e++ ) _b -= x[ e->N ] * e->Value;       \
@@ -1049,14 +1049,14 @@ int SparseMatrix<T>::SolveGS( const SparseMatrix<T>& M , const Vector<T2>& diago
 	}
 
 #if ZERO_TESTING_JACOBI
-	if( forward ) for( int j=0 ; j<int(M.rows)    ; j++ ){ if( diagonal[j] ){ ITERATE; } }
-	else          for( int j=int(M.rows)-1 ; j>=0 ; j-- ){ if( diagonal[j] ){ ITERATE; } }
+	if( forward ) for( int j=0 ; j<int(M.rows())    ; j++ ){ if( diagonal[j] ){ ITERATE; } }
+	else          for( int j=int(M.rows())-1 ; j>=0 ; j-- ){ if( diagonal[j] ){ ITERATE; } }
 #else // !ZERO_TESTING_JACOBI
-	if( forward ) for( int j=0 ; j<int(M.rows) ; j++ ){ ITERATE; }
-	else          for( int j=int(M.rows)-1 ; j>=0 ; j-- ){ ITERATE; }
+	if( forward ) for( int j=0 ; j<int(M.rows()) ; j++ ){ ITERATE; }
+	else          for( int j=int(M.rows())-1 ; j>=0 ; j-- ){ ITERATE; }
 #endif // ZERO_TESTING_JACOBI
 #undef ITERATE
-	return M.rows;
+	return M.rows();
 }
 template<class T>
 template<class T2>
@@ -1076,7 +1076,7 @@ SetOMPParallel                                                                  
 		{                                                                         \
 			int jj = indices[k];                                                  \
 			ConstPointer( MatrixEntry< T > ) start = M[jj];                       \
-			ConstPointer( MatrixEntry< T > ) end = start + M.rowSizes[jj];        \
+			ConstPointer( MatrixEntry< T > ) end = start + M.rowSize(jj);        \
 			ConstPointer( MatrixEntry< T > ) e;                                   \
 			T2 _b = b[jj+offset];                                                 \
 			for( e=start ; e!=end ; e++ ) _b -= x[ e->N ] * e->Value;             \
@@ -1091,7 +1091,7 @@ SetOMPParallel                                                              \
 		{                                                                   \
 			int jj = indices[k];                                            \
 			ConstPointer( MatrixEntry< T > ) start = M[jj];                 \
-			ConstPointer( MatrixEntry< T > ) end = start + M.rowSizes[jj];  \
+			ConstPointer( MatrixEntry< T > ) end = start + M.rowSize(jj);  \
 			ConstPointer( MatrixEntry< T > ) e;                             \
 			T2 _b = b[jj+offset];                                           \
 			for( e=start ; e!=end ; e++ ) _b -= x[ e->N ] * e->Value;       \
@@ -1110,7 +1110,7 @@ template<class T>
 template<class T2>
 int SparseMatrix<T>::SolveGS( const SparseMatrix<T>& M , const Vector<T2>& b , Vector<T2>& x , bool forward , int offset )
 {
-	int start = forward ? 0 : M.rows-1 , end = forward ? M.rows : -1 , dir = forward ? 1 : -1;
+	int start = forward ? 0 : M.rows()-1 , end = forward ? M.rows() : -1 , dir = forward ? 1 : -1;
 	for( int j=start ; j!=end ; j+=dir )
 	{
 		T diagonal = M[j][0].Value;
@@ -1119,7 +1119,7 @@ int SparseMatrix<T>::SolveGS( const SparseMatrix<T>& M , const Vector<T2>& b , V
 #endif // ZERO_TESTING_JACOBI
 		{
 			ConstPointer( MatrixEntry< T > ) start = M[j];
-			ConstPointer( MatrixEntry< T > ) end = start + M.rowSizes[j];
+			ConstPointer( MatrixEntry< T > ) end = start + M.rowSize(j);
 			ConstPointer( MatrixEntry< T > ) e;
 			start++;
 			T2 _b = b[j+offset];
@@ -1127,7 +1127,7 @@ int SparseMatrix<T>::SolveGS( const SparseMatrix<T>& M , const Vector<T2>& b , V
 			x[j+offset] = _b / diagonal;
 		}
 	}
-	return M.rows;
+	return M.rows();
 }
 template<class T>
 template<class T2>
@@ -1149,7 +1149,7 @@ int SparseMatrix<T>::SolveGS( const std::vector< std::vector< int > >& mcIndices
 #endif // ZERO_TESTING_JACOBI
 				{
 					ConstPointer( MatrixEntry< T > ) start = M[jj];
-					ConstPointer( MatrixEntry< T > ) end = start + M.rowSizes[jj];
+					ConstPointer( MatrixEntry< T > ) end = start + M.rowSize(jj);
 					ConstPointer( MatrixEntry< T > ) e;
 					start++;
 					T2 _b = b[jj+offset];
@@ -1173,7 +1173,7 @@ int SparseSymmetricMatrix<T>::SolveGS( const SparseSymmetricMatrix<T>& M , const
 #define ITERATE                                                         \
 	{                                                                   \
 		ConstPointer( MatrixEntry< T > ) start = M[j];                  \
-		ConstPointer( MatrixEntry< T > ) end = start + M.rowSizes[j];   \
+		ConstPointer( MatrixEntry< T > ) end = start + M.rowSize(j);   \
 		ConstPointer( MatrixEntry< T > ) e;                             \
 		T2 _Mx = Mx[j];                                                 \
 		if( ordering!=ORDERING_UPPER_TRIANGULAR )                       \
@@ -1185,14 +1185,14 @@ int SparseSymmetricMatrix<T>::SolveGS( const SparseSymmetricMatrix<T>& M , const
 	}
 
 #if ZERO_TESTING_JACOBI
-	if( forward ) for( int j=0 ; j<int(M.rows)    ; j++ ){ if( diagonal[j] ){ ITERATE; } }
-	else          for( int j=int(M.rows)-1 ; j>=0 ; j-- ){ if( diagonal[j] ){ ITERATE; } }
+	if( forward ) for( int j=0 ; j<int(M.rows())    ; j++ ){ if( diagonal[j] ){ ITERATE; } }
+	else          for( int j=int(M.rows())-1 ; j>=0 ; j-- ){ if( diagonal[j] ){ ITERATE; } }
 #else // !ZERO_TESTING_JACOBI
-	if( forward ) for( int j=0 ; j<int(M.rows)    ; j++ ){ ITERATE; }
-	else          for( int j=int(M.rows)-1 ; j>=0 ; j-- ){ ITERATE; }
+	if( forward ) for( int j=0 ; j<int(M.rows())    ; j++ ){ ITERATE; }
+	else          for( int j=int(M.rows())-1 ; j>=0 ; j-- ){ ITERATE; }
 #endif // ZERO_TESTING_JACOBI
 #undef ITERATE
-	return M.rows;
+	return M.rows();
 }
 template<class T>
 template<class T2>
@@ -1204,7 +1204,7 @@ int SparseSymmetricMatrix<T>::SolveGS( const SparseSymmetricMatrix<T>& M , const
 #define ITERATE                                                         \
 	{                                                                   \
 		ConstPointer( MatrixEntry< T > ) start = M[j];                  \
-		ConstPointer( MatrixEntry< T > ) end = start + M.rowSizes[j];   \
+		ConstPointer( MatrixEntry< T > ) end = start + M.rowSize(j);   \
 		ConstPointer( MatrixEntry< T > ) e;                             \
 		T2 _Mx = Mx[j];                                                 \
 		if( ordering!=ORDERING_UPPER_TRIANGULAR )                       \
@@ -1216,14 +1216,14 @@ int SparseSymmetricMatrix<T>::SolveGS( const SparseSymmetricMatrix<T>& M , const
 	}
 
 #if ZERO_TESTING_JACOBI
-	if( forward ) for( int j=0 ; j<int(M.rows)    ; j++ ){ if( diagonal[j] ){ ITERATE; } }
-	else          for( int j=int(M.rows)-1 ; j>=0 ; j-- ){ if( diagonal[j] ){ ITERATE; } }
+	if( forward ) for( int j=0 ; j<int(M.rows())    ; j++ ){ if( diagonal[j] ){ ITERATE; } }
+	else          for( int j=int(M.rows())-1 ; j>=0 ; j-- ){ if( diagonal[j] ){ ITERATE; } }
 #else // !ZERO_TESTING_JACOBI
-	if( forward ) for( int j=0 ; j<int(M.rows)    ; j++ ){ ITERATE; }
-	else          for( int j=int(M.rows)-1 ; j>=0 ; j-- ){ ITERATE; }
+	if( forward ) for( int j=0 ; j<int(M.rows())    ; j++ ){ ITERATE; }
+	else          for( int j=int(M.rows())-1 ; j>=0 ; j-- ){ ITERATE; }
 #endif // ZERO_TESTING_JACOBI
 #undef ITERATE
-	return M.rows;
+	return M.rows();
 }
 template<class T>
 template<class T2>
@@ -1246,7 +1246,7 @@ SetOMPParallel                                                                  
 		{                                                                         \
 			int jj = indices[k];                                                  \
 			ConstPointer( MatrixEntry< T > ) start = M[jj];                       \
-			ConstPointer( MatrixEntry< T > ) end = start + M.rowSizes[jj];        \
+			ConstPointer( MatrixEntry< T > ) end = start + M.rowSize(jj);        \
 			ConstPointer( MatrixEntry< T > ) e;                                   \
 			T2 _Mx = Mx[jj];                                                      \
 			for( e=start ; e!=end ; e++ ) _Mx += dx[ e->N ] * e->Value;           \
@@ -1264,7 +1264,7 @@ SetOMPParallel                                                             \
 		{                                                                  \
 			int jj = indices[k];                                           \
 			ConstPointer( MatrixEntry< T > ) start = M[jj];                \
-			ConstPointer( MatrixEntry< T > ) end = start + M.rowSizes[jj]; \
+			ConstPointer( MatrixEntry< T > ) end = start + M.rowSize(jj); \
 			ConstPointer( MatrixEntry< T > ) e;                            \
 			T2 _Mx = Mx[jj];                                               \
 			for( e=start ; e!=end ; e++ ) _Mx += dx[ e->N ] * e->Value;    \
@@ -1288,7 +1288,7 @@ int SparseSymmetricMatrix<T>::SolveGS( const SparseSymmetricMatrix<T>& M , const
 {
 	Vector< T2 > diagonal , Mx , dx;
 	M.getDiagonal( diagonal );
-	Mx.Resize( M.rows ) , dx.Resize( M.rows );
+	Mx.Resize( M.rows() ) , dx.Resize( M.rows() );
 	for( int i=0 ; i<iters ; i++ ) SolveGS( M , diagonal , b , solution , Mx , dx , forward , reset , ordering );
 	return iters;
 }
@@ -1298,7 +1298,7 @@ int SparseSymmetricMatrix<T>::SolveGS( const SparseSymmetricMatrix<T>& M , const
 {
 	Vector< T2 > diagonal , Mx , dx;
 	M.getDiagonal( diagonal , scratch.threads() );
-	Mx.Resize( M.rows ) , dx.Resize( M.rows );
+	Mx.Resize( M.rows() ) , dx.Resize( M.rows() );
 	for( int i=0 ; i<iters ; i++ ) SolveGS( M , diagonal , b , solution , scratch , Mx , dx , forward , reset , ordering );
 	return iters;
 }
@@ -1308,7 +1308,7 @@ int SparseSymmetricMatrix<T>::SolveGS( const std::vector< std::vector< int > >& 
 {
 	Vector< T2 > diagonal , Mx , dx;
 	M.getDiagonal( diagonal , scratch.threads() );
-	Mx.Resize( M.rows ) , dx.Resize( M.rows );
+	Mx.Resize( M.rows() ) , dx.Resize( M.rows() );
 	for( int i=0 ; i<iters ; i++ ) SolveGS( mcIndices , M , diagonal , b , solution , scratch , Mx , dx , forward , reset );
 	return iters;
 }
@@ -1316,14 +1316,14 @@ template< class T >
 template< class T2 >
 void SparseMatrix< T >::getDiagonal( Vector< T2 >& diagonal , int threads , int offset ) const
 {
-	diagonal.Resize( SparseMatrix< T >::rows );
+	diagonal.Resize( _rows );
 #pragma omp parallel for num_threads( threads )
-	for( int i=0 ; i<rows ; i++ )
+	for( int i=0 ; i<_rows ; i++ )
 	{
 		int ii = i+offset;
 		T2 d = 0.;
-		ConstPointer( MatrixEntry< T > ) start = m_ppElements[i];
-		ConstPointer( MatrixEntry< T > ) end = start + rowSizes[i];
+		ConstPointer( MatrixEntry< T > ) start = _m_ppElements[i];
+		ConstPointer( MatrixEntry< T > ) end = start + _rowSizes[i];
 		ConstPointer( MatrixEntry< T > ) e;
 		for( e=start ; e!=end ; e++ ) if( e->N==ii ) d += e->Value;
 		diagonal[i] = d;
@@ -1333,13 +1333,13 @@ template< class T >
 template< class T2 >
 void SparseSymmetricMatrix< T >::getDiagonal( Vector< T2 >& diagonal , int threads ) const
 {
-	diagonal.Resize( SparseMatrix< T >::rows );
+	diagonal.Resize( SparseMatrix< T >::_rows );
 #pragma omp parallel for num_threads( threads )
-	for( int i=0 ; i<SparseMatrix< T >::rows ; i++ )
+	for( int i=0 ; i<SparseMatrix< T >::_rows ; i++ )
 	{
 		T2 d = 0.;
-		ConstPointer( MatrixEntry< T > ) start = SparseMatrix< T >::m_ppElements[i];
-		ConstPointer( MatrixEntry< T > ) end = start + SparseMatrix< T >::rowSizes[i];
+		ConstPointer( MatrixEntry< T > ) start = SparseMatrix< T >::_m_ppElements[i];
+		ConstPointer( MatrixEntry< T > ) end = start + SparseMatrix< T >::_rowSizes[i];
 		ConstPointer( MatrixEntry< T > ) e;
 		for( e=start ; e!=end ; e++ ) if( e->N==i ) d += e->Value;
 		diagonal[i] = d * T2(2);

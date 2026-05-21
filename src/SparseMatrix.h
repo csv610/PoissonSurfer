@@ -26,8 +26,8 @@ ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF S
 DAMAGE.
 */
 
-#ifndef __SPARSEMATRIX_HPP
-#define __SPARSEMATRIX_HPP
+#ifndef SPARSEMATRIX_HPP
+#define SPARSEMATRIX_HPP
 
 #define ZERO_TESTING_JACOBI 1
 
@@ -38,7 +38,7 @@ DAMAGE.
 template <class T>
 struct MatrixEntry
 {
-	MatrixEntry( void )		    { N =-1; Value = 0; }
+	MatrixEntry()		    { N =-1; Value = 0; }
 	MatrixEntry( int i )	    { N = i; Value = 0; }
 	MatrixEntry( int i , T v )	{ N = i; Value = v; }
 	int N;
@@ -50,21 +50,25 @@ template<class T> class SparseMatrix
 private:
 	bool _contiguous;
 	int _maxEntriesPerRow;
-	void _init( void );
+	void _init();
+protected:
+	int _rows;
+	Pointer( int ) _rowSizes;
+	Pointer( Pointer( MatrixEntry< T > ) ) _m_ppElements;
 public:
-	int rows;
-	Pointer( int ) rowSizes;
-	Pointer( Pointer( MatrixEntry< T > ) ) m_ppElements;
-	Pointer( MatrixEntry< T > ) operator[] ( int idx ) { return m_ppElements[idx]; }
-	ConstPointer( MatrixEntry< T > ) operator[] ( int idx ) const { return m_ppElements[idx]; }
+	int rows() const { return _rows; }
+	int rowSize( int idx ) const { return _rowSizes[idx]; }
+	int& rowSize( int idx ) { return _rowSizes[idx]; }
+	Pointer( MatrixEntry< T > ) operator[] ( int idx ) { return _m_ppElements[idx]; }
+	ConstPointer( MatrixEntry< T > ) operator[] ( int idx ) const { return _m_ppElements[idx]; }
 
-	SparseMatrix( void );
+	SparseMatrix();
 	SparseMatrix( int rows );
 	SparseMatrix( int rows , int maxEntriesPerRow );
 	void Resize( int rows );
 	void Resize( int rows , int maxEntriesPerRow );
 	void SetRowSize( int row , int count );
-	int Entries( void ) const;
+	int Entries() const;
 
 	SparseMatrix( const SparseMatrix& M );
 	~SparseMatrix();
@@ -120,15 +124,15 @@ private:
 	int _dim;
 public:
 	std::vector< T2* > out;
-	MapReduceVector( void ) { _dim = 0; }
-	~MapReduceVector( void )
+	MapReduceVector() { _dim = 0; }
+	~MapReduceVector()
 	{
 		if( _dim ) for( int t=0 ; t<int(out.size()) ; t++ ) delete[] out[t];
 		out.resize( 0 );
 	}
 	T2* operator[]( int t ) { return out[t]; }
 	const T2* operator[]( int t ) const { return out[t]; }
-	int threads( void ) const { return int( out.size() ); }
+	int threads() const { return int( out.size() ); }
 	void resize( int threads , int dim )
 	{
 		if( threads!=out.size() || _dim<dim )

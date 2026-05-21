@@ -678,7 +678,7 @@ void Octree< Real >::SetSliceIsoEdges( int depth , int slice , int z , std::vect
 					fe.count = MarchingSquares::AddEdgeIndices( mcIndex , isoEdges );
 					for( int j=0 ; j<fe.count ; j++ ) for( int k=0 ; k<2 ; k++ )
 					{
-						if( !sValues.edgeSet[ eIndices[ isoEdges[2*j+k] ] ] ) fprintf( stderr , "[ERROR] Edge not set 1: %d / %d\n" , slice , 1<<depth ) , exit( 0 );
+						if( !sValues.edgeSet[ eIndices[ isoEdges[2*j+k] ] ] ) fprintf( stderr , "[ERROR] Edge not set 1: %d / %d\n" , slice , 1<<depth ) , throw std::runtime_error("Fatal error");
 						fe.edges[j][k] = sValues.edgeKeys[ eIndices[ isoEdges[2*j+k] ] ];
 					}
 					sValues.faceSet[ fIndices[0] ] = 1;
@@ -747,14 +747,14 @@ void Octree< Real >::SetXSliceIsoEdges( int depth , int slab , std::vector< Slab
 							if( _o==1 ) // Cross-edge
 							{
 								int idx = o==0 ? cIndices[ Square::CornerIndex(_x,x) ] : cIndices[ Square::CornerIndex(x,_x) ];
-								if( !xValues.edgeSet[ idx ] ) fprintf( stderr , "[ERROR] Edge not set 3: %d / %d\n" , slab , 1<<depth ) , exit( 0 );
+								if( !xValues.edgeSet[ idx ] ) fprintf( stderr , "[ERROR] Edge not set 3: %d / %d\n" , slab , 1<<depth ) , throw std::runtime_error("Fatal error");
 								fe.edges[j][k] = xValues.edgeKeys[ idx ];
 							}
 							else
 							{
 								const typename Octree< Real >::template SliceValues< Vertex >& sValues = (_x==0) ? bValues : fValues;
 								int idx = sValues.sliceData.edgeIndices(i)[ Square::EdgeIndex(o,x) ];
-								if( !sValues.edgeSet[ idx ] ) fprintf( stderr , "[ERROR] Edge not set 5: %d / %d\n" , slab , 1<<depth ) , exit( 0 );
+								if( !sValues.edgeSet[ idx ] ) fprintf( stderr , "[ERROR] Edge not set 5: %d / %d\n" , slab , 1<<depth ) , throw std::runtime_error("Fatal error");
 								fe.edges[j][k] = sValues.edgeKeys[ idx ];
 							}
 						}
@@ -831,7 +831,7 @@ int Octree< Real >::SetIsoSurface( int depth , int offset , const SliceValues< V
 								const std::vector< IsoEdge >& _edges = iter->second;
 								for( int j=0 ; j<_edges.size() ; j++ ) edges.push_back( IsoEdge( _edges[j][flip] , _edges[j][1-flip] ) );
 							}
-							else fprintf( stderr , "[ERROR] Invalid faces: %d  %d %d\n" , i , d , o ) , exit( 0 );
+							else fprintf( stderr , "[ERROR] Invalid faces: %d  %d %d\n" , i , d , o ) , throw std::runtime_error("Fatal error");
 						}
 					}
 					else
@@ -851,7 +851,7 @@ int Octree< Real >::SetIsoSurface( int depth , int offset , const SliceValues< V
 								const std::vector< IsoEdge >& _edges = iter->second;
 								for( int j=0 ; j<_edges.size() ; j++ ) edges.push_back( IsoEdge( _edges[j][flip] , _edges[j][1-flip] ) );
 							}
-							else fprintf( stderr , "[ERROR] Invalid faces: %d  %d %d\n" , i , d , o ) , exit( 0 );
+							else fprintf( stderr , "[ERROR] Invalid faces: %d  %d %d\n" , i , d , o ) , throw std::runtime_error("Fatal error");
 						}
 					}
 				}
@@ -873,7 +873,7 @@ int Octree< Real >::SetIsoSurface( int depth , int offset , const SliceValues< V
 							if     ( (iter=bValues.vertexPairMap.find(current))!=bValues.vertexPairMap.end() ) loops.back().push_back( current ) , current = iter->second;
 							else if( (iter=fValues.vertexPairMap.find(current))!=fValues.vertexPairMap.end() ) loops.back().push_back( current ) , current = iter->second;
 							else if( (iter=xValues.vertexPairMap.find(current))!=xValues.vertexPairMap.end() ) loops.back().push_back( current ) , current = iter->second;
-							else fprintf( stderr , "[ERROR] Failed to close loop @ depth %d / %d (%d): %lld\n" , depth , _sNodes.maxDepth-1 , i , current ) , exit( 0 );
+							else fprintf( stderr , "[ERROR] Failed to close loop @ depth %d / %d (%d): %lld\n" , depth , _sNodes.maxDepth-1 , i , current ) , throw std::runtime_error("Fatal error");
 						}
 						else
 						{
@@ -895,7 +895,7 @@ int Octree< Real >::SetIsoSurface( int depth , int offset , const SliceValues< V
 						if     ( ( iter=bValues.edgeVertexMap.find( key ) )!=bValues.edgeVertexMap.end() ) polygon[k] = iter->second;
 						else if( ( iter=fValues.edgeVertexMap.find( key ) )!=fValues.edgeVertexMap.end() ) polygon[k] = iter->second;
 						else if( ( iter=xValues.edgeVertexMap.find( key ) )!=xValues.edgeVertexMap.end() ) polygon[k] = iter->second;
-						else fprintf( stderr , "[ERROR] Couldn't find vertex in edge map\n" ) , exit( 0 );
+						else fprintf( stderr , "[ERROR] Couldn't find vertex in edge map\n" ) , throw std::runtime_error("Fatal error");
 					}
 					AddIsoPolygons( mesh , polygon , polygonMesh , addBarycenter , vOffset );
 				}
@@ -1058,7 +1058,7 @@ int Octree< Real >::AddIsoPolygons( CoredMeshData< Vertex >& mesh , std::vector<
 	if( polygonMesh )
 	{
 		std::vector< int > vertices( polygon.size() );
-		for( int i=0 ; i<(int)polygon.size() ; i++ ) vertices[i] = polygon[polygon.size()-1-i].first;
+		for( int i=0 ; i<static_cast<int>(polygon.size()) ; i++ ) vertices[i] = polygon[polygon.size()-1-i].first;
 		mesh.addPolygon_s( vertices );
 		return 1;
 	}
@@ -1068,7 +1068,7 @@ int Octree< Real >::AddIsoPolygons( CoredMeshData< Vertex >& mesh , std::vector<
 		std::vector< int > triangle( 3 );
 
 		if( addBarycenter )
-			for( int i=0 ; i<(int)polygon.size() ; i++ )
+			for( int i=0 ; i<static_cast<int>(polygon.size()) ; i++ )
 				for( int j=0 ; j<i ; j++ )
 					if( (i+1)%polygon.size()!=j && (j+1)%polygon.size()!=i )
 					{
@@ -1079,7 +1079,7 @@ int Octree< Real >::AddIsoPolygons( CoredMeshData< Vertex >& mesh , std::vector<
 		{
 			Vertex c;
 			c *= 0;
-			for( int i=0 ; i<(int)polygon.size() ; i++ ) c += polygon[i].second;
+			for( int i=0 ; i<static_cast<int>(polygon.size()) ; i++ ) c += polygon[i].second;
 			c /= Real( polygon.size() );
 			int cIdx;
 #pragma omp critical (add_barycenter_point_access)
@@ -1087,14 +1087,14 @@ int Octree< Real >::AddIsoPolygons( CoredMeshData< Vertex >& mesh , std::vector<
 				cIdx = mesh.addOutOfCorePoint( c );
 				vOffset++;
 			}
-			for( int i=0 ; i<(int)polygon.size() ; i++ )
+			for( int i=0 ; i<static_cast<int>(polygon.size()) ; i++ )
 			{
 				triangle[0] = polygon[ i                  ].first;
 				triangle[1] = cIdx;
 				triangle[2] = polygon[(i+1)%polygon.size()].first;
 				mesh.addPolygon_s( triangle );
 			}
-			return (int)polygon.size();
+			return static_cast<int>(polygon.size());
 		}
 		else
 		{
@@ -1103,9 +1103,9 @@ int Octree< Real >::AddIsoPolygons( CoredMeshData< Vertex >& mesh , std::vector<
 			std::vector< TriangleIndex > triangles;
 			vertices.resize( polygon.size() );
 			// Add the points
-			for( int i=0 ; i<(int)polygon.size() ; i++ ) vertices[i] = polygon[i].second.point;
+			for( int i=0 ; i<static_cast<int>(polygon.size()) ; i++ ) vertices[i] = polygon[i].second.point;
 			MAT.GetTriangulation( vertices , triangles );
-			for( int i=0 ; i<(int)triangles.size() ; i++ )
+			for( int i=0 ; i<static_cast<int>(triangles.size()) ; i++ )
 			{
 				for( int j=0 ; j<3 ; j++ ) triangle[2-j] = polygon[ triangles[i].idx[j] ].first;
 				mesh.addPolygon_s( triangle );
@@ -1118,5 +1118,5 @@ int Octree< Real >::AddIsoPolygons( CoredMeshData< Vertex >& mesh , std::vector<
 		for( int i=0 ; i<3 ; i++ ) vertices[2-i] = polygon[i].first;
 		mesh.addPolygon_s( vertices );
 	}
-	return (int)polygon.size()-2;
+	return static_cast<int>(polygon.size())-2;
 }

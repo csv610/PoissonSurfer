@@ -25,24 +25,25 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING 
 ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 DAMAGE.
 */
-
-#ifndef __VECTOR_HPP
-#define __VECTOR_HPP
+#ifndef VECTOR_H
+#define VECTOR_H
 
 
 #define Assert assert
 #include <assert.h>
+#include <span>
 #include "Array.h"
 
 template< class T >
 class Vector
 {
 public:
-	Vector( void );
+	Vector();
 	Vector( const Vector<T>& V );
 	Vector( size_t N );
 	Vector( size_t N, ConstPointer( T ) pV );
-	~Vector( void );
+	Vector( std::span<const T> s );
+	~Vector();
 
 	const T& operator () (size_t i) const;
 	T& operator () (size_t i);
@@ -53,6 +54,9 @@ public:
 
 	size_t Dimensions() const;
 	void Resize( size_t N );
+
+	std::span<T> as_span() { return std::span<T>( PointerAddress(m_pV) , m_N ); }
+	std::span<const T> as_span() const { return std::span<const T>( (const T*)PointerAddress(m_pV) , m_N ); }
 
 	Vector operator * (const T& A) const;
 	Vector operator / (const T& A) const;
@@ -92,18 +96,18 @@ public:
 	bool read( FILE* fp );
 	bool read( const char* fileName );
 
+private:
 	Pointer( T ) m_pV;
-protected:
 	size_t m_N;
 
 };
 
 #if ARRAY_DEBUG
-template< class C >      Array< C > GetPointer(       Vector< C >& v ){ return      Array< C >::FromPointer( &v[0] , v.Dimensions() ); }
-template< class C > ConstArray< C > GetPointer( const Vector< C >& v ){ return ConstArray< C >::FromPointer( &v[0] , v.Dimensions() ); }
+template< class C >       C* GetPointer(       Vector< C >& v ){ return v.as_span().data(); }
+template< class C > const C* GetPointer( const Vector< C >& v ){ return v.as_span().data(); }
 #else // !ARRAY_DEBUG
-template< class C >       C* GetPointer(       Vector< C >& v ){ return &v[0]; }
-template< class C > const C* GetPointer( const Vector< C >& v ){ return &v[0]; }
+template< class C >       C* GetPointer(       Vector< C >& v ){ return v.as_span().data(); }
+template< class C > const C* GetPointer( const Vector< C >& v ){ return v.as_span().data(); }
 #endif // ARRAY_DEBUG
 
 #include "Vector.inl"

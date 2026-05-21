@@ -646,7 +646,7 @@ template< int Degree >
 void BSplineElements< Degree >::upSample( BSplineElements< Degree >& high ) const
 {
 	fprintf( stderr , "[ERROR] B-spline up-sampling not supported for degree %d\n" , Degree );
-	exit( 0 );
+	throw std::runtime_error("Fatal error");
 }
 template<>
 void BSplineElements< 1 >::upSample( BSplineElements< 1 >& high ) const

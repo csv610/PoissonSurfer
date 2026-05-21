@@ -43,7 +43,7 @@ public:
 	size_t FreeVirtualAddressSpace;
 	size_t PageSize;
 
-	void set(void){
+	void set(){
 		MEMORYSTATUSEX Mem;
 		SYSTEM_INFO Info;
 		ZeroMemory( &Mem, sizeof(Mem));
@@ -52,17 +52,17 @@ public:
 		::GlobalMemoryStatusEx( &Mem );
 		::GetSystemInfo( &Info );
 
-		TotalPhysicalMemory = (size_t)Mem.ullTotalPhys;
-		FreePhysicalMemory = (size_t)Mem.ullAvailPhys;
-		TotalSwapSpace = (size_t)Mem.ullTotalPageFile;
-		FreeSwapSpace = (size_t)Mem.ullAvailPageFile;
-		TotalVirtualAddressSpace = (size_t)Mem.ullTotalVirtual;
-		FreeVirtualAddressSpace = (size_t)Mem.ullAvailVirtual;
-		PageSize = (size_t)Info.dwPageSize;
+		TotalPhysicalMemory = static_cast<size_t>(Mem.ullTotalPhys);
+		FreePhysicalMemory = static_cast<size_t>(Mem.ullAvailPhys);
+		TotalSwapSpace = static_cast<size_t>(Mem.ullTotalPageFile);
+		FreeSwapSpace = static_cast<size_t>(Mem.ullAvailPageFile);
+		TotalVirtualAddressSpace = static_cast<size_t>(Mem.ullTotalVirtual);
+		FreeVirtualAddressSpace = static_cast<size_t>(Mem.ullAvailVirtual);
+		PageSize = static_cast<size_t>(Info.dwPageSize);
 	}
-	size_t usage(void) const {return TotalVirtualAddressSpace-FreeVirtualAddressSpace;}
+	size_t usage() const {return TotalVirtualAddressSpace-FreeVirtualAddressSpace;}
 
-	static size_t Usage(void){
+	static size_t Usage(){
 		MEMORY_BASIC_INFORMATION mbi; 
 		size_t      dwMemUsed = 0; 
 		PVOID      pvAddress = 0; 
@@ -87,7 +87,7 @@ public:
 class MemoryInfo
 {
  public:
-  static size_t Usage(void)
+  static size_t Usage()
   {
 		FILE* f = fopen("/proc/self/stat","rb");
 		
@@ -180,7 +180,7 @@ void getres(task_t task, unsigned long *rss, unsigned long *vs)
 class MemoryInfo
 {
  public:
-  static size_t Usage(void)
+  static size_t Usage()
   {
     unsigned long rss, vs, psize;
     task_t task = MACH_PORT_NULL;

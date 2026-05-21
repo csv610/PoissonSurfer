@@ -34,6 +34,7 @@ DAMAGE.
 #include <windows.h>
 #endif // _WIN32
 #include <stddef.h>
+#include <stdexcept>
 
 inline bool isfinitef( float fp ){ float f=fp; return ((*(unsigned *)&f)&0x7f800000)!=0x7f800000; }
 
@@ -70,9 +71,9 @@ class Array
 	{
 		if( idx<min || idx>=max )
 		{
-			fprintf( stderr , "Array index out-of-bounds: %lld <= %lld < %lld\n" , min , idx , max );
-			ASSERT( 0 );
-			exit( 0 );
+			char message[1024];
+			snprintf( message , sizeof(message) , "Array index out-of-bounds: %lld <= %lld < %lld\n" , min , idx , max );
+			throw std::runtime_error( message );
 		}
 	}
 protected:
@@ -107,8 +108,8 @@ protected:
 #endif // FULL_ARRAY_DEBUG
 
 public:
-	long long minimum( void ) const { return min; }
-	long long maximum( void ) const { return max; }
+	long long minimum() const { return min; }
+	long long maximum() const { return max; }
 
 	static inline Array New( size_t size , const char* name=NULL )
 	{
@@ -169,7 +170,7 @@ public:
 		return _a;
 	}
 
-	Array( void )
+	Array()
 	{
 		data = _data = NULL;
 		min = max = 0;
@@ -193,9 +194,9 @@ public:
 			max = ( a.maximum() * szD ) / szC;
 			if( min*szC!=a.minimum()*szD || max*szC!=a.maximum()*szD )
 			{
-				fprintf( stderr , "Could not convert array [ %lld , %lld ] * %lld => [ %lld , %lld ] * %lld\n" , a.minimum() , a.maximum() , szD , min , max , szC );
-				ASSERT( 0 );
-				exit( 0 );
+				char message[1024];
+				snprintf( message , sizeof(message) , "Could not convert array [ %lld , %lld ] * %lld => [ %lld , %lld ] * %lld\n" , a.minimum() , a.maximum() , szD , min , max , szC );
+				throw std::runtime_error( message );
 			}
 		}
 	}
@@ -221,7 +222,7 @@ public:
 	inline bool operator != ( const Array< C >& a ) const { return data!=a.data; }
 	inline bool operator == ( const C* c ) const { return data==c; }
 	inline bool operator != ( const C* c ) const { return data!=c; }
-	inline C* operator -> ( void )
+	inline C* operator -> ()
 	{
 		_assertBounds( 0 );
 		return data;
@@ -314,10 +315,10 @@ public:
 	Array& operator -= ( long long idx )    { return (*this) += (-idx); }
 	Array& operator -= ( unsigned int idx )    { return (*this) += (-idx); }
 	Array& operator -= ( unsigned long long idx )    { return (*this) += (-idx); }
-	Array& operator -- ( void ) { return (*this) -= 1; }
+	Array& operator -- () { return (*this) -= 1; }
 	long long operator - ( const Array& a ) const { return ( long long )( data - a.data ); }
 
-	void Free( void )
+	void Free()
 	{
 		if( _data )
 		{
@@ -328,7 +329,7 @@ public:
 		}
 		(*this) = Array( );
 	}
-	void Delete( void )
+	void Delete()
 	{
 		if( _data )
 		{
@@ -339,9 +340,9 @@ public:
 		}
 		(*this) = Array( );
 	}
-	C* pointer( void ){ return data; }
-	const C* pointer( void ) const { return data; }
-	bool operator !( void ) const { return data==NULL; }
+	C* pointer(){ return data; }
+	const C* pointer() const { return data; }
+	bool operator !() const { return data==NULL; }
 	operator bool( ) const { return data!=NULL; }
 };
 
@@ -352,19 +353,19 @@ class ConstArray
 	{
 		if( idx<min || idx>=max )
 		{
-			fprintf( stderr , "ConstArray index out-of-bounds: %lld <= %lld < %lld\n" , min , idx , max );
-			ASSERT( 0 );
-			exit( 0 );
+			char message[1024];
+			snprintf( message , sizeof(message) , "ConstArray index out-of-bounds: %lld <= %lld < %lld\n" , min , idx , max );
+			throw std::runtime_error( message );
 		}
 	}
 protected:
 	const C *data;
 	long long min , max;
 public:
-	long long minimum( void ) const { return min; }
-	long long maximum( void ) const { return max; }
+	long long minimum() const { return min; }
+	long long maximum() const { return max; }
 
-	inline ConstArray( void )
+	inline ConstArray()
 	{
 		data = NULL;
 		min = max = 0;
@@ -387,10 +388,9 @@ public:
 		max = ( a.maximum() * szD ) / szC;
 		if( min*szC!=a.minimum()*szD || max*szC!=a.maximum()*szD )
 		{
-//			fprintf( stderr , "Could not convert const array [ %lld , %lld ] * %lld => [ %lld , %lld ] * %lld\n" , a.minimum() , a.maximum() , szD , min , max , szC );
-			fprintf( stderr , "Could not convert const array [ %lld , %lld ] * %lld => [ %lld , %lld ] * %lld\n %lld %lld %lld\n" , a.minimum() , a.maximum() , szD , min , max , szC , a.minimum() , a.minimum()*szD , (a.minimum()*szD)/szC );
-			ASSERT( 0 );
-			exit( 0 );
+			char message[1024];
+			snprintf( message , sizeof(message) , "Could not convert const array [ %lld , %lld ] * %lld => [ %lld , %lld ] * %lld\n %lld %lld %lld\n" , a.minimum() , a.maximum() , szD , min , max , szC , a.minimum() , a.minimum()*szD , (a.minimum()*szD)/szC );
+			throw std::runtime_error( message );
 		}
 	}
 	template< class D >
@@ -404,9 +404,9 @@ public:
 		max = ( a.maximum() * szD ) / szC;
 		if( min*szC!=a.minimum()*szD || max*szC!=a.maximum()*szD )
 		{
-			fprintf( stderr , "Could not convert array [ %lld , %lld ] * %lld => [ %lld , %lld ] * %lld\n" , a.minimum() , a.maximum() , szD , min , max , szC );
-			ASSERT( 0 );
-			exit( 0 );
+			char message[1024];
+			snprintf( message , sizeof(message) , "Could not convert array [ %lld , %lld ] * %lld => [ %lld , %lld ] * %lld\n" , a.minimum() , a.maximum() , szD , min , max , szC );
+			throw std::runtime_error( message );
 		}
 	}
 	static ConstArray FromPointer( const C* data , long long max )
@@ -430,7 +430,7 @@ public:
 	inline bool operator != ( const ConstArray< C >& a ) const { return data!=a.data; }
 	inline bool operator == ( const C* c ) const { return data==c; }
 	inline bool operator != ( const C* c ) const { return data!=c; }
-	inline const C* operator -> ( void )
+	inline const C* operator -> ()
 	{
 		_assertBounds( 0 );
 		return data;
@@ -500,7 +500,7 @@ public:
 		data += idx;
 		return (*this);
 	}
-	inline ConstArray& operator ++ ( void ) { return (*this) += 1; }
+	inline ConstArray& operator ++ () { return (*this) += 1; }
 	ConstArray  operator -  ( int idx ) const { return (*this) +  (-idx); }
 	ConstArray  operator -  ( long long idx ) const { return (*this) +  (-idx); }
 	ConstArray  operator -  ( unsigned int idx ) const { return (*this) +  (-idx); }
@@ -509,17 +509,17 @@ public:
 	ConstArray& operator -= ( long long idx )    { return (*this) += (-idx); }
 	ConstArray& operator -= ( unsigned int idx )    { return (*this) += (-idx); }
 	ConstArray& operator -= ( unsigned long long idx )    { return (*this) += (-idx); }
-	ConstArray& operator -- ( void ) { return (*this) -= 1; }
+	ConstArray& operator -- () { return (*this) -= 1; }
 	long long operator - ( const ConstArray& a ) const { return ( long long )( data - a.data ); }
 	long long operator - ( const Array< C >& a ) const { return ( long long )( data - a.pointer() ); }
 
-	const C* pointer( void ) const { return data; }
-	bool operator !( void ) { return data==NULL; }
+	const C* pointer() const { return data; }
+	bool operator !() { return data==NULL; }
 	operator bool( ) { return data!=NULL; }
 };
 
 #if FULL_ARRAY_DEBUG
-inline void PrintMemoryInfo( void ){ for( size_t i=0 ; i<memoryInfo.size() ; i++ ) printf( "%d] %s\n" , i , memoryInfo[i].name ); }
+inline void PrintMemoryInfo(){ for( size_t i=0 ; i<memoryInfo.size() ; i++ ) printf( "%d] %s\n" , i , memoryInfo[i].name ); }
 #endif // FULL_ARRAY_DEBUG
 template< class C >
 Array< C > memcpy( Array< C > destination , const void* source , size_t size )
@@ -528,7 +528,7 @@ Array< C > memcpy( Array< C > destination , const void* source , size_t size )
 	{
 		fprintf( stderr , "Size of copy exceeds destination maximum: %lld > %lld\n" , ( long long )( size ) , ( long long )( destination.maximum()*sizeof( C ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	if( size ) memcpy( &destination[0] , source , size );
 	return destination;
@@ -540,13 +540,13 @@ Array< C > memcpy( Array< C > destination , Array< D > source , size_t size )
 	{
 		fprintf( stderr , "Size of copy exceeds destination maximum: %lld > %lld\n" , ( long long )( size ) , ( long long )( destination.maximum()*sizeof( C ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	if( size>source.maximum()*sizeof( D ) )
 	{
 		fprintf( stderr , "Size of copy exceeds source maximum: %lld > %lld\n" , ( long long )( size ) , ( long long )( source.maximum()*sizeof( D ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	if( size ) memcpy( &destination[0] , &source[0] , size );
 	return destination;
@@ -558,13 +558,13 @@ Array< C > memcpy( Array< C > destination , ConstArray< D > source , size_t size
 	{
 		fprintf( stderr , "Size of copy exceeds destination maximum: %lld > %lld\n" , ( long long )( size ) , ( long  long )( destination.maximum()*sizeof( C ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	if( size>source.maximum()*sizeof( D ) )
 	{
 		fprintf( stderr , "Size of copy exceeds source maximum: %lld > %lld\n" , ( long long )( size ) , ( long long )( source.maximum()*sizeof( D ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	if( size ) memcpy( &destination[0] , &source[0] , size );
 	return destination;
@@ -576,7 +576,7 @@ void* memcpy( void* destination , Array< D > source , size_t size )
 	{
 		fprintf( stderr , "Size of copy exceeds source maximum: %lld > %lld\n" , ( long long )( size ) , ( long long )( source.maximum()*sizeof( D ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	if( size ) memcpy( destination , &source[0] , size );
 	return destination;
@@ -588,7 +588,7 @@ void* memcpy( void* destination , ConstArray< D > source , size_t size )
 	{
 		fprintf( stderr , "Size of copy exceeds source maximum: %lld > %lld\n" , ( long long )( size ) , ( long long )( source.maximum()*sizeof( D ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	if( size ) memcpy( destination , &source[0] , size );
 	return destination;
@@ -600,7 +600,7 @@ Array< C > memset( Array< C > destination , int value , size_t size )
 	{
 		fprintf( stderr , "Size of set exceeds destination maximum: %lld > %lld\n" , ( long long )( size ) , ( long long )( destination.maximum()*sizeof( C ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	if( size ) memset( &destination[0] , value , size );
 	return destination;
@@ -613,7 +613,7 @@ size_t fread( Array< C > destination , size_t eSize , size_t count , FILE* fp )
 	{
 		fprintf( stderr , "Size of read exceeds source maximum: %lld > %lld\n" , ( long long )( count*eSize ) , ( long long )( destination.maximum()*sizeof( C ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	return fread( &destination[0] , eSize , count , fp );
 }
@@ -624,7 +624,7 @@ size_t fwrite( Array< C > source , size_t eSize , size_t count , FILE* fp )
 	{
 		fprintf( stderr , "Size of write exceeds source maximum: %lld > %lld\n" , ( long long )( count*eSize ) , ( long long )( source.maximum()*sizeof( C ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	return fwrite( &source[0] , eSize , count , fp );
 }
@@ -635,7 +635,7 @@ size_t fwrite( ConstArray< C > source , size_t eSize , size_t count , FILE* fp )
 	{
 		fprintf( stderr , "Size of write exceeds source maximum: %lld > %lld\n" , ( long long )( count*eSize ) , ( long long )( source.maximum()*sizeof( C ) ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	return fwrite( &source[0] , eSize , count , fp );
 }
@@ -646,13 +646,13 @@ void qsort( Array< C > base , size_t numElements , size_t elementSize , int (*co
 	{
 		fprintf( stderr , "Element sizes differ: %lld != %lld\n" , ( long long )( sizeof(C) ) , ( long long )( elementSize ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	if( base.minimum()>0 || base.maximum()<numElements )
 	{
 		fprintf( stderr , "Array access out of bounds: %lld <= 0 <= %lld <= %lld\n" , base.minimum() , base.maximum() , ( long long )( numElements ) );
 		ASSERT( 0 );
-		exit( 0 );
+		throw std::runtime_error("Fatal error");
 	}
 	qsort( base.pointer() , numElements , elementSize , compareFunction );
 }
